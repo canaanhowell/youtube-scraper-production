@@ -1,0 +1,32 @@
+# YouTube Scraper Production Dependencies
+
+# Firebase
+firebase-admin>=6.2.0
+
+# Redis (native client for better performance)
+redis>=4.5.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Environment management
+python-dotenv>=1.0.0
+
+# Date/time handling
+pytz>=2023.3
+
+# JSON handling (usually built-in)
+# json - built-in
+
+# System utilities (usually built-in)
+# os, sys, subprocess, pathlib - built-in
+
+# Regular expressions (usually built-in) 
+# re - built-in
+
+# Logging (usually built-in)
+# logging - built-in
+
+# Additional utilities
+# time, datetime - built-in
+# typing - built-in

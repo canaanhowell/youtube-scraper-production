@@ -16,7 +16,7 @@ sys.path.append(str(Path(__file__).parent))
 # Import our modules
 from src.utils.env_loader import load_env
 from src.utils.firebase_client import FirebaseClient
-from src.utils.redis_client import RedisClient
+from src.utils.redis_client_enhanced import RedisClientEnhanced as RedisClient
 
 # Set up logging
 logging.basicConfig(
@@ -252,8 +252,8 @@ class YouTubeScraperProduction:
         
         try:
             key = f"video:{video_id}"
-            # Store for 3 hours
-            self.redis.setex(key, 10800, "1")
+            # Store for 24 hours (86400 seconds) for better deduplication across longer runs
+            self.redis.setex(key, 86400, "1")
         except Exception as e:
             logger.error(f"Error marking video: {e}")
     
