@@ -103,19 +103,37 @@ class YouTubeCollectionManager:
             raise ValueError(f"Missing required environment variables: {missing}")
     
     def _get_surfshark_servers(self) -> List[str]:
-        """Get list of Surfshark US servers"""
-        us_locations = [
-            'nyc', 'lax', 'chi', 'dal', 'mia', 'atl', 'sea', 'den', 'phx',
-            'bos', 'sfo', 'las', 'hou', 'orl', 'kan', 'clt', 'tpa', 'stl',
-            'slc', 'buf', 'ltm', 'dtw', 'bdn', 'rag'
-        ]
-        
-        servers = []
-        for location in us_locations:
-            # No numbered servers anymore
+        """Get comprehensive list of Surfshark US servers (100+ servers)"""
+        try:
+            # Import the comprehensive server discovery utility
+            from src.utils.surfshark_servers import SurfsharkServers
+            
+            # Get all servers from the comprehensive list
+            surfshark = SurfsharkServers()
+            all_servers = surfshark.get_us_servers()
+            
+            # Extract server names for VPN rotation
+            server_names = [server['name'] for server in all_servers]
+            
+            logger.info(f"Loaded {len(server_names)} Surfshark US servers from comprehensive list")
+            return server_names
+            
+        except Exception as e:
+            logger.warning(f"Failed to load comprehensive server list: {e}")
+            logger.info("Falling back to basic server list")
+            
+            # Fallback to basic list if there's an issue
+            us_locations = [
+                'nyc', 'lax', 'chi', 'dal', 'mia', 'atl', 'sea', 'den', 'phx',
+                'bos', 'sfo', 'las', 'hou', 'orl', 'kan', 'clt', 'tpa', 'stl',
+                'slc', 'buf', 'ltm', 'dtw', 'bdn', 'rag'
+            ]
+            
+            servers = []
+            for location in us_locations:
                 servers.append(f"us-{location}.prod.surfshark.com")
-        
-        return servers
+            
+            return servers
     
     def rotate_vpn_server(self, server: str) -> bool:
         """Rotate to new VPN server using environment variables"""

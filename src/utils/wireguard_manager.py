@@ -40,21 +40,36 @@ class WireGuardManager:
         logger.info(f"WireGuard manager initialized with {len(self.us_servers)} US servers")
     
     def get_surfshark_servers(self) -> List[Dict[str, str]]:
-        """Get list of Surfshark US servers"""
-        # This is a sample list - in production, fetch from Surfshark API
-        servers = [
-            {"name": "us-nyc.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "84.17.35.107:51820"},
-            {"name": "us-lax.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "138.199.35.8:51820"},
-            {"name": "us-chi.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "138.199.42.136:51820"},
-            {"name": "us-mia.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "89.38.227.188:51820"},
-            {"name": "us-dal.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "209.107.210.106:51820"},
-            {"name": "us-sea.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "104.200.135.171:51820"},
-            {"name": "us-den.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "23.105.136.132:51820"},
-            {"name": "us-atl.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "185.203.218.83:51820"},
-            {"name": "us-phx.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "23.19.128.208:51820"},
-            {"name": "us-slc.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "185.174.99.204:51820"},
-        ]
-        return servers
+        """Get comprehensive list of Surfshark US servers (100+ servers)"""
+        try:
+            # Import the comprehensive server discovery utility
+            from .surfshark_servers import SurfsharkServers
+            
+            # Get all servers from the comprehensive list
+            surfshark = SurfsharkServers()
+            servers = surfshark.get_us_servers()
+            
+            logger.info(f"Loaded {len(servers)} Surfshark US servers from comprehensive list")
+            return servers
+            
+        except Exception as e:
+            logger.warning(f"Failed to load comprehensive server list: {e}")
+            logger.info("Falling back to basic server list")
+            
+            # Fallback to basic list if there's an issue
+            servers = [
+                {"name": "us-nyc.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "84.17.35.107:51820"},
+                {"name": "us-lax.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "138.199.35.8:51820"},
+                {"name": "us-chi.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "138.199.42.136:51820"},
+                {"name": "us-mia.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "89.38.227.188:51820"},
+                {"name": "us-dal.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "209.107.210.106:51820"},
+                {"name": "us-sea.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "104.200.135.171:51820"},
+                {"name": "us-den.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "23.105.136.132:51820"},
+                {"name": "us-atl.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "185.203.218.83:51820"},
+                {"name": "us-phx.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "23.19.128.208:51820"},
+                {"name": "us-slc.prod.surfshark.com", "public_key": "Ik9pPCyMJKno1RVHnf+4HhqT8se3kfWJZL7EqVEN5Xk=", "endpoint": "185.174.99.204:51820"},
+            ]
+            return servers
     
     def load_cache(self):
         """Load used servers from persistent cache"""
