@@ -41,6 +41,37 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    
+    # Resource limits to prevent resource exhaustion
+    deploy:
+      resources:
+        limits:
+          # Limit to 2GB RAM (generous for VPN container)
+          memory: 2G
+          # Limit to 2 CPU cores (more than enough for VPN)
+          cpus: '2.0'
+        reservations:
+          # Reserve minimum resources for reliable operation
+          memory: 512M
+          cpus: '0.5'
+    
+    # Additional resource controls
+    mem_limit: 2g
+    mem_reservation: 512m
+    cpus: 2.0
+    cpu_shares: 1024  # Default priority
+    
+    # Security constraints
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # gluetun needs write access
+    
+    # Logging configuration to prevent log disk usage issues
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
 
 volumes:
   vpn-data:
