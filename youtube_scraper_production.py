@@ -18,16 +18,22 @@ from src.utils.env_loader import load_env
 from src.utils.firebase_client import FirebaseClient
 from src.utils.redis_client_enhanced import RedisClientEnhanced as RedisClient
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('/opt/youtube_scraper/logs/scraper.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+# Set up enhanced logging
+try:
+    from src.utils.logging_config_enhanced import setup_logging
+    logger, network_logger = setup_logging(log_level="INFO", console_output=True)
+except ImportError:
+    # Fallback to basic logging if enhanced config not available
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('/opt/youtube_scraper/logs/scraper.log'),
+            logging.StreamHandler()
+        ]
+    )
+    logger = logging.getLogger(__name__)
+    network_logger = logging.getLogger('network')
 
 class YouTubeScraperProduction:
     def __init__(self):
