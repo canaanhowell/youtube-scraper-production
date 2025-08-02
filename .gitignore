@@ -1,0 +1,43 @@
+# Logs
+logs/
+*.log
+
+# Environment variables and secrets
+.env
+*.json
+\!requirements.txt
+
+# Data files
+data/
+*.csv
+*.sqlite
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.venv/
+venv/
+
+# Docker volumes
+*.cache
+vpn_cache.json
+surfshark_servers.json
+
+# Temporary files
+*.tmp
+*.temp
+sample.html
+debug_sample.html
+
+# Production specific
+production_test_report_*.json
+*_backup*.py
+*_backup*.sh
+*.backup
+
+# Archive directory
+archive/
