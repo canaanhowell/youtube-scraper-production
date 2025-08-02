@@ -268,27 +268,51 @@ class YouTubeCollectionManager:
             attempted_servers.add(server)
             logger.info(f"Attempt {attempt}/{self.max_vpn_attempts_per_keyword} for keyword '{keyword}' using server: {server}")
             
-            # Try to connect to VPN server
-            if self.rotate_vpn_server(server):
-                # VPN connected successfully, now scrape
-                try:
-                    result = self.scraper.scrape_keyword(keyword, max_videos=100)
+            try:
+                # Try to connect to VPN server with exponential backoff
+                if self.rotate_vpn_server(server):
+                    # VPN connected successfully, now scrape
+                    try:
+                        result = self.scraper.scrape_keyword(keyword, max_videos=100)
+                        
+                        videos_collected = result.get('saved_to_firebase', 0)
+                        self.collection_stats['videos_per_keyword'][keyword] = videos_collected
+                        self.collection_stats['total_videos_collected'] += videos_collected
+                        
+                        logger.info(f"✅ Successfully collected {videos_collected} videos for '{keyword}' using {server}")
+                        return videos_collected
+                        
+                    except Exception as e:
+                        # Scraping failed, but VPN was working - this is a different error
+                        logger.error(f"❌ Scraping failed for keyword '{keyword}' with working VPN {server}: {e}")
+                        
+                        # For scraping errors, don't mark VPN server as failed
+                        # but do raise the error to be handled at keyword level
+                        raise Exception(f"Scraping error for '{keyword}': {str(e)}")
+                else:
+                    # VPN connection failed, try next server
+                    logger.warning(f"⚠️ VPN connection failed for server {server}, trying next server...")
                     
-                    videos_collected = result.get('saved_to_firebase', 0)
-                    self.collection_stats['videos_per_keyword'][keyword] = videos_collected
-                    self.collection_stats['total_videos_collected'] += videos_collected
+                    # Add exponential backoff delay before next attempt
+                    if attempt < self.max_vpn_attempts_per_keyword:
+                        backoff_delay = min(2 ** (attempt - 1), 30)  # Max 30 seconds
+                        logger.info(f"Waiting {backoff_delay}s before next VPN attempt...")
+                        time.sleep(backoff_delay)
                     
-                    logger.info(f"Successfully collected {videos_collected} videos for '{keyword}' using {server}")
-                    return videos_collected
+                    continue
                     
-                except Exception as e:
-                    # Scraping failed, but VPN was working - this is a different error
-                    logger.error(f"Scraping failed for keyword '{keyword}' with working VPN {server}: {e}")
-                    raise  # Re-raise scraping errors (not VPN errors)
-            else:
-                # VPN connection failed, try next server
-                logger.warning(f"VPN connection failed for server {server}, trying next server...")
-                continue
+            except Exception as e:
+                # Catch any unexpected errors during VPN rotation or scraping
+                logger.error(f"Unexpected error on attempt {attempt} for keyword '{keyword}': {e}")
+                
+                # If this is the last attempt, re-raise the error
+                if attempt == self.max_vpn_attempts_per_keyword:
+                    raise
+                
+                # Otherwise, wait and try next server
+                backoff_delay = min(2 ** (attempt - 1), 30)
+                logger.info(f"Waiting {backoff_delay}s before next attempt due to error...")
+                time.sleep(backoff_delay)
         
         # If we get here, all VPN attempts failed
         raise Exception(f"Failed to connect to any VPN server for keyword '{keyword}' after {self.max_vpn_attempts_per_keyword} attempts. "
@@ -309,27 +333,66 @@ class YouTubeCollectionManager:
             
             logger.info(f"Starting collection for {len(keywords)} keywords")
             
-            # Process each keyword with retry logic
-            for keyword in keywords:
+            # Process each keyword with proper error isolation
+            successful_keywords = []
+            failed_keywords = []
+            
+            for i, keyword in enumerate(keywords, 1):
+                logger.info(f"Processing keyword {i}/{len(keywords)}: '{keyword}'")
+                
                 try:
-                    # Process keyword with VPN retry logic (NEVER skip keywords)
-                    self.process_keyword_with_retry(keyword)
+                    # Process keyword with VPN retry logic
+                    result = self.process_keyword_with_retry(keyword)
+                    successful_keywords.append(keyword)
                     self.collection_stats['keywords_processed'].append(keyword)
+                    
+                    # Log success
+                    logger.info(f"✅ Successfully processed keyword '{keyword}' ({i}/{len(keywords)})")
                     
                     # Log server health status after each keyword
                     logger.info(f"Server health status - Working: {len(self.working_servers)}, "
                               f"Failed: {len(self.failed_servers)}, Untested: {len(self.untested_servers)}")
                     
                 except Exception as e:
-                    # Keyword processing failed completely (all VPN servers failed or scraping error)
-                    logger.error(f"CRITICAL: Failed to process keyword '{keyword}': {e}")
+                    # Keyword processing failed - isolate error and continue with next keyword
+                    logger.error(f"❌ Failed to process keyword '{keyword}': {e}")
+                    failed_keywords.append(keyword)
                     self.collection_stats['errors'].append(f"Keyword '{keyword}': {str(e)}")
-                    # Do not continue if we can't process a keyword - fail the entire run
-                    raise Exception(f"Collection failed on keyword '{keyword}': {e}")
+                    
+                    # Add keyword-specific error tracking
+                    if 'failed_keywords' not in self.collection_stats:
+                        self.collection_stats['failed_keywords'] = []
+                    self.collection_stats['failed_keywords'].append({
+                        'keyword': keyword,
+                        'error': str(e),
+                        'timestamp': datetime.now(timezone.utc).isoformat()
+                    })
+                    
+                    # Log but continue processing other keywords
+                    logger.warning(f"Continuing with remaining keywords ({len(keywords) - i} left)")
             
-            # Mark success
-            self.collection_stats['success'] = True
-            logger.info("All keywords processed successfully")
+            # Determine overall success based on results
+            total_keywords = len(keywords)
+            success_count = len(successful_keywords)
+            failure_count = len(failed_keywords)
+            success_rate = (success_count / total_keywords) * 100 if total_keywords > 0 else 0
+            
+            # Consider collection successful if at least 50% of keywords succeeded
+            self.collection_stats['success'] = success_rate >= 50.0
+            self.collection_stats['success_rate'] = success_rate
+            self.collection_stats['successful_keywords'] = successful_keywords
+            self.collection_stats['failed_keywords_list'] = failed_keywords
+            
+            # Log final results
+            if success_rate >= 50.0:
+                logger.info(f"🎉 Collection completed successfully! "
+                          f"Success rate: {success_rate:.1f}% ({success_count}/{total_keywords})")
+            else:
+                logger.warning(f"⚠️ Collection completed with low success rate: "
+                             f"{success_rate:.1f}% ({success_count}/{total_keywords})")
+            
+            if failed_keywords:
+                logger.warning(f"Failed keywords: {', '.join(failed_keywords)}")
             
         except Exception as e:
             logger.error(f"Collection failed: {e}")
