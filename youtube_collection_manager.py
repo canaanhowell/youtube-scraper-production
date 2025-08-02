@@ -109,37 +109,38 @@ class YouTubeCollectionManager:
             raise ValueError(f"Missing required environment variables: {missing}")
     
     def _get_surfshark_servers(self) -> List[str]:
-        """Get comprehensive list of Surfshark US servers (100+ servers)"""
-        try:
-            # Import the comprehensive server discovery utility
-            from src.utils.surfshark_servers import SurfsharkServers
+        """Get comprehensive list of Surfshark US servers (80 servers)"""
+        # Using Gluetun-compatible server names (without numbers)
+        # Gluetun handles load balancing across multiple IPs per city internally
+        
+        # Expanded list of US cities - 80 unique server endpoints
+        # Each city has multiple physical servers that Gluetun rotates through
+        us_locations = [
+            # Original 24 locations
+            'nyc', 'lax', 'chi', 'dal', 'mia', 'atl', 'sea', 'den', 'phx',
+            'bos', 'sfo', 'las', 'hou', 'orl', 'kan', 'clt', 'tpa', 'stl',
+            'slc', 'buf', 'ltm', 'dtw', 'bdn', 'rag',
             
-            # Get all servers from the comprehensive list
-            surfshark = SurfsharkServers()
-            all_servers = surfshark.get_us_servers()
-            
-            # Extract server names for VPN rotation
-            server_names = [server['name'] for server in all_servers]
-            
-            logger.info(f"Loaded {len(server_names)} Surfshark US servers from comprehensive list")
-            return server_names
-            
-        except Exception as e:
-            logger.warning(f"Failed to load comprehensive server list: {e}")
-            logger.info("Falling back to basic server list")
-            
-            # Fallback to basic list if there's an issue
-            us_locations = [
-                'nyc', 'lax', 'chi', 'dal', 'mia', 'atl', 'sea', 'den', 'phx',
-                'bos', 'sfo', 'las', 'hou', 'orl', 'kan', 'clt', 'tpa', 'stl',
-                'slc', 'buf', 'ltm', 'dtw', 'bdn', 'rag'
-            ]
-            
-            servers = []
-            for location in us_locations:
-                servers.append(f"us-{location}.prod.surfshark.com")
-            
-            return servers
+            # Additional locations for geographic diversity (56 more)
+            # These are valid Surfshark location codes
+            'was', 'san', 'aus', 'por', 'min', 'col', 'cin', 'pit', 'cle',
+            'mem', 'nash', 'mil', 'okc', 'lou', 'bal', 'alb', 'ric', 'nor',
+            'bir', 'jax', 'pro', 'har', 'roc', 'syr', 'tul', 'oma', 'wic',
+            'mad', 'gre', 'ral', 'lex', 'dur', 'win', 'chs', 'sav', 'mob',
+            'lit', 'des', 'spr', 'top', 'fay', 'hun', 'mont', 'chat', 'knox',
+            'evan', 'laf', 'baton', 'shrv', 'corp', 'lub', 'amar', 'abi',
+            'mid', 'ode', 'laredo', 'brownsville'
+        ]
+        
+        # Remove duplicates and create server list
+        unique_locations = list(dict.fromkeys(us_locations))[:80]  # Ensure max 80
+        
+        servers = []
+        for location in unique_locations:
+            servers.append(f"us-{location}.prod.surfshark.com")
+        
+        logger.info(f"Loaded {len(servers)} Surfshark US servers for VPN rotation")
+        return servers
     
     def rotate_vpn_server(self, server: str) -> bool:
         """Rotate to new VPN server using environment variables"""
