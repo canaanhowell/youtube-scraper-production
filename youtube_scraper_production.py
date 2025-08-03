@@ -47,7 +47,10 @@ class YouTubeScraperProduction:
         # Container name for VPN
         self.container_name = "youtube-vpn"
         
-        logger.info("Production YouTube scraper initialized")
+        # Title filtering configuration
+        self.strict_title_filter = os.getenv('YOUTUBE_STRICT_TITLE_FILTER', 'true').lower() == 'true'
+        
+        logger.info(f"Production YouTube scraper initialized (strict_title_filter={self.strict_title_filter})")
     
     def scrape_keyword(self, keyword: str, max_videos: int = 1000) -> Dict:
         """Scrape YouTube for a keyword and save to Firebase"""
@@ -66,8 +69,8 @@ class YouTubeScraperProduction:
                 return {'keyword': keyword, 'videos': [], 'error': 'Failed to fetch content'}
             
             # Extract videos from HTML using ytInitialData
-            videos = self._extract_videos_from_initial_data(html_content, keyword)
-            logger.info(f"Extracted {len(videos)} total videos")
+            videos, filtered_count = self._extract_videos_from_initial_data(html_content, keyword)
+            logger.info(f"Extracted {len(videos)} videos matching keyword (filtered out {filtered_count} videos)")
             
             # Filter duplicates using Redis
             new_videos = []
@@ -102,6 +105,7 @@ class YouTubeScraperProduction:
             result = {
                 'keyword': keyword,
                 'total_found': len(videos),
+                'filtered_out': filtered_count,
                 'new_videos': len(new_videos),
                 'duplicates': duplicate_count,
                 'saved_to_firebase': saved_count,
@@ -153,9 +157,14 @@ class YouTubeScraperProduction:
             logger.error(f"Error fetching page: {e}")
             return None
     
-    def _extract_videos_from_initial_data(self, html_content: str, keyword: str) -> List[Dict]:
-        """Extract video data from YouTube's ytInitialData"""
+    def _extract_videos_from_initial_data(self, html_content: str, keyword: str) -> tuple[List[Dict], int]:
+        """Extract video data from YouTube's ytInitialData
+        
+        Returns:
+            tuple: (list of videos, count of filtered videos)
+        """
         videos = []
+        filtered_count = 0
         
         try:
             # Find ytInitialData in the HTML
@@ -181,14 +190,17 @@ class YouTubeScraperProduction:
                     if 'videoRenderer' in item:
                         video_data = self._parse_video_renderer(item['videoRenderer'], keyword)
                         if video_data:
-                            videos.append(video_data)
+                            if video_data == 'filtered':
+                                filtered_count += 1
+                            else:
+                                videos.append(video_data)
             
-            logger.info(f"Extracted {len(videos)} videos from ytInitialData")
-            return videos
+            logger.info(f"Extracted {len(videos)} videos from ytInitialData (filtered {filtered_count})")
+            return videos, filtered_count
             
         except Exception as e:
             logger.error(f"Error extracting videos: {e}", exc_info=True)
-            return []
+            return [], 0
     
     def _parse_video_renderer(self, video_renderer: Dict, keyword: str) -> Optional[Dict]:
         """Parse a videoRenderer object into our video data format"""
@@ -200,6 +212,11 @@ class YouTubeScraperProduction:
             # Extract title
             title_runs = video_renderer.get('title', {}).get('runs', [])
             title = ' '.join(run.get('text', '') for run in title_runs) if title_runs else ''
+            
+            # Check if title contains keyword (if strict filtering is enabled)
+            if self.strict_title_filter and not self._title_contains_keyword(title, keyword):
+                logger.debug(f"Filtered out video: '{title}' (keyword: '{keyword}')")
+                return 'filtered'
             
             # Extract thumbnail URL
             thumbnails = video_renderer.get('thumbnail', {}).get('thumbnails', [])
@@ -262,6 +279,53 @@ class YouTubeScraperProduction:
             self.redis.setex(key, 86400, "1")
         except Exception as e:
             logger.error(f"Error marking video: {e}")
+    
+    def _title_contains_keyword(self, title: str, keyword: str) -> bool:
+        """
+        Check if the title contains the keyword.
+        Handles multi-word keywords and special characters.
+        
+        Args:
+            title: Video title
+            keyword: Search keyword (can be multi-word)
+            
+        Returns:
+            bool: True if keyword is found in title
+        """
+        # Convert to lowercase for case-insensitive comparison
+        title_lower = title.lower()
+        keyword_lower = keyword.lower()
+        
+        # First check if the entire keyword appears in the title
+        if keyword_lower in title_lower:
+            return True
+        
+        # For multi-word keywords, also check hyphenated versions
+        # e.g., "machine learning" -> "machine-learning"
+        if ' ' in keyword_lower:
+            hyphenated_keyword = keyword_lower.replace(' ', '-')
+            if hyphenated_keyword in title_lower:
+                return True
+            
+            # Also check if all words appear in the title (not necessarily together)
+            # This helps with titles like "Learning Machine: AI Tutorial"
+            words = keyword_lower.split()
+            if len(words) > 1 and all(word in title_lower for word in words):
+                # All words present, check if they're reasonably close
+                # (within 3 words of each other)
+                first_word_pos = title_lower.find(words[0])
+                last_word_pos = title_lower.find(words[-1])
+                
+                if first_word_pos != -1 and last_word_pos != -1:
+                    # Count words between first and last keyword word
+                    substring = title_lower[first_word_pos:last_word_pos]
+                    word_count = len(substring.split())
+                    
+                    # If words are within 4 positions of each other, consider it a match
+                    if word_count <= len(words) + 3:
+                        return True
+        
+        return False
     
     def _save_to_firebase(self, keyword: str, video_data: Dict) -> bool:
         """Save video to Firebase"""

@@ -21,6 +21,7 @@ Enterprise-ready YouTube scraper with automated deployment, VPN rotation, and co
 - Configured hourly automation via cron
 - Enhanced error handling and logging
 - Improved VPN server selection algorithm
+- **NEW**: Added strict title filtering to ensure collected videos contain the search keyword in their title
 
 ## Quick Start
 
@@ -119,6 +120,9 @@ SURFSHARK_ADDRESS=10.14.0.2/16
 # App Settings
 ENVIRONMENT=production
 LOG_LEVEL=INFO
+
+# YouTube Scraper Settings
+YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (default: true)
 ```
 
 ## Deployment
