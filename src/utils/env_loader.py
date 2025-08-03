@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 def load_env():
     """Load environment variables from .env file"""
     # Look for .env in the project root
-    env_path = Path("/opt/youtube_scraper/.env")
+    env_path = Path("/opt/youtube_app/.env")
     
     if not env_path.exists():
         # Try current directory

@@ -1,0 +1,100 @@
+name: Smart Auto-Deploy to Production VM
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for change detection
+    
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H 134.199.201.56 >> ~/.ssh/known_hosts
+    
+    - name: Test VM connection
+      run: |
+        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 root@134.199.201.56 "echo 'SSH connection successful'"
+    
+    - name: Deploy to VM
+      run: |
+        ssh -i ~/.ssh/id_rsa root@134.199.201.56 << 'EOF'
+          set -e
+          
+          echo "🚀 Starting smart deployment..."
+          
+          # Navigate to project directory
+          cd /opt/youtube_scraper
+          
+          # Pull latest changes
+          echo "📥 Pulling latest changes..."
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Make deployment script executable
+          chmod +x deployment/scripts/smart_deploy.sh
+          
+          # Run smart deployment
+          echo "🔧 Running smart deployment..."
+          if ./deployment/scripts/smart_deploy.sh; then
+            echo "✅ Deployment completed successfully"
+          else
+            echo "❌ Deployment failed"
+            exit 1
+          fi
+        EOF
+    
+    - name: Verify deployment
+      run: |
+        ssh -i ~/.ssh/id_rsa root@134.199.201.56 << 'EOF'
+          echo "🔍 Verifying deployment..."
+          
+          cd /opt/youtube_scraper
+          
+          # Check core service
+          if systemctl is-active youtube-scraper >/dev/null 2>&1; then
+            echo "✅ youtube-scraper service is running"
+          else
+            echo "❌ youtube-scraper service is not running"
+            exit 1
+          fi
+          
+          # Check logs for recent activity
+          echo "📋 Recent logs:"
+          tail -5 logs/scraper.log 2>/dev/null || echo "No scraper logs found"
+          
+          # Show service statuses
+          echo "📊 Service status:"
+          systemctl list-units --type=service --state=active | grep youtube || echo "No youtube services found"
+          
+        EOF
+    
+    - name: Deployment Status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "🎉 Deployment successful!"
+          echo "Changes have been automatically deployed to the production VM."
+        else
+          echo "💥 Deployment failed!"
+          echo "Please check the logs above for details."
+        fi
+    
+    - name: Send notification on failure
+      if: failure()
+      run: |
+        echo "🚨 DEPLOYMENT FAILED 🚨"
+        echo "Repository: ${{ github.repository }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Check the GitHub Actions logs for details."

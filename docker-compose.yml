@@ -46,18 +46,18 @@ services:
     deploy:
       resources:
         limits:
-          # Limit to 2GB RAM (generous for VPN container)
-          memory: 2G
+          # Limit to 4GB RAM (50% of VM capacity)
+          memory: 4G
           # Limit to 2 CPU cores (more than enough for VPN)
           cpus: '2.0'
         reservations:
           # Reserve minimum resources for reliable operation
-          memory: 512M
+          memory: 1G
           cpus: '0.5'
     
     # Additional resource controls
-    mem_limit: 2g
-    mem_reservation: 512m
+    mem_limit: 4g
+    mem_reservation: 1g
     cpus: 2.0
     cpu_shares: 1024  # Default priority
     

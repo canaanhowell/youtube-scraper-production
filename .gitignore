@@ -6,6 +6,7 @@ logs/
 .env
 *.json
 \!requirements.txt
+ai-tracker-466821-892ecf5150a3.json
 
 # Data files
 data/

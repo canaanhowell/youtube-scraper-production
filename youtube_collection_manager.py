@@ -109,27 +109,17 @@ class YouTubeCollectionManager:
             raise ValueError(f"Missing required environment variables: {missing}")
     
     def _get_surfshark_servers(self) -> List[str]:
-        """Get comprehensive list of Surfshark US servers (80 servers)"""
+        """Get list of Surfshark US servers (24 verified locations)"""
         # Using Gluetun-compatible server names (without numbers)
         # Gluetun handles load balancing across multiple IPs per city internally
         
-        # Expanded list of US cities - 80 unique server endpoints
+        # Known working Surfshark US city codes
         # Each city has multiple physical servers that Gluetun rotates through
         us_locations = [
-            # Original 24 locations
+            # Verified working locations (24 core cities)
             'nyc', 'lax', 'chi', 'dal', 'mia', 'atl', 'sea', 'den', 'phx',
             'bos', 'sfo', 'las', 'hou', 'orl', 'kan', 'clt', 'tpa', 'stl',
-            'slc', 'buf', 'ltm', 'dtw', 'bdn', 'rag',
-            
-            # Additional locations for geographic diversity (56 more)
-            # These are valid Surfshark location codes
-            'was', 'san', 'aus', 'por', 'min', 'col', 'cin', 'pit', 'cle',
-            'mem', 'nash', 'mil', 'okc', 'lou', 'bal', 'alb', 'ric', 'nor',
-            'bir', 'jax', 'pro', 'har', 'roc', 'syr', 'tul', 'oma', 'wic',
-            'mad', 'gre', 'ral', 'lex', 'dur', 'win', 'chs', 'sav', 'mob',
-            'lit', 'des', 'spr', 'top', 'fay', 'hun', 'mont', 'chat', 'knox',
-            'evan', 'laf', 'baton', 'shrv', 'corp', 'lub', 'amar', 'abi',
-            'mid', 'ode', 'laredo', 'brownsville'
+            'slc', 'buf', 'ltm', 'dtw', 'bdn', 'rag'
         ]
         
         # Remove duplicates and create server list
@@ -166,7 +156,11 @@ class YouTubeCollectionManager:
             # Start with new server
             logger.info(f"Starting VPN with server: {server}")
             env = os.environ.copy()
-            env['VPN_SERVER'] = server
+            # Convert server name to Gluetun format (remove number suffix)
+            import re
+            gluetun_server = re.sub(r'-\d+\.prod', '.prod', server)
+            logger.info(f"Using Gluetun server format: {gluetun_server}")
+            env['VPN_SERVER'] = gluetun_server
             
             result = subprocess.run(
                 ['docker', 'compose', 'up', '-d'],

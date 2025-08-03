@@ -12,9 +12,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
+def get_default_log_dir():
+    """Get the appropriate log directory based on environment"""
+    # Check if running on production VM
+    if Path("/opt/youtube_scraper").exists():
+        return "/opt/youtube_scraper/logs"
+    # Use local directory for development
+    else:
+        return str(Path.cwd() / "logs")
+
 def setup_logging(
     log_level: str = "INFO",
-    log_dir: str = "/opt/youtube_scraper/logs",
+    log_dir: str = None,
     max_bytes: int = 100 * 1024 * 1024,  # 100MB
     backup_count: int = 7,  # Keep 7 rotated files
     console_output: bool = True
@@ -24,7 +33,7 @@ def setup_logging(
     
     Args:
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
-        log_dir: Directory for log files
+        log_dir: Directory for log files (None to use default)
         max_bytes: Maximum size per log file before rotation
         backup_count: Number of rotated files to keep
         console_output: Whether to output to console
@@ -32,6 +41,10 @@ def setup_logging(
     Returns:
         Tuple of (main_logger, network_logger)
     """
+    
+    # Use default log directory if not specified
+    if log_dir is None:
+        log_dir = get_default_log_dir()
     
     # Create logs directory if it doesn't exist
     log_dir = Path(log_dir)
@@ -124,6 +137,7 @@ def setup_basic_logging() -> logging.Logger:
     """
     main_logger, _ = setup_logging(
         log_level="INFO",
+        log_dir=None,  # Use default based on environment
         console_output=True,
         max_bytes=50 * 1024 * 1024,  # 50MB
         backup_count=3
@@ -131,15 +145,18 @@ def setup_basic_logging() -> logging.Logger:
     return main_logger
 
 
-def cleanup_old_log_files(log_dir: str = "/opt/youtube_scraper/logs", days_old: int = 7):
+def cleanup_old_log_files(log_dir: str = None, days_old: int = 7):
     """
     Clean up old timestamped log files and empty log files
     
     Args:
-        log_dir: Directory containing log files
+        log_dir: Directory containing log files (None to use default)
         days_old: Remove files older than this many days
     """
     import time
+    
+    if log_dir is None:
+        log_dir = get_default_log_dir()
     
     log_dir = Path(log_dir)
     if not log_dir.exists():
@@ -176,7 +193,7 @@ if __name__ == "__main__":
     print("Testing enhanced logging configuration...")
     
     # Test basic setup
-    logger, network_logger = setup_logging(log_level="DEBUG", console_output=True)
+    logger, network_logger = setup_logging(log_level="DEBUG", log_dir=None, console_output=True)
     
     # Test logging at different levels
     logger.debug("This is a debug message")
@@ -189,7 +206,7 @@ if __name__ == "__main__":
     network_logger.warning("Network timeout detected")
     
     print("✅ Enhanced logging test completed")
-    print("📁 Check /opt/youtube_scraper/logs/ for log files")
+    print(f"📁 Check {get_default_log_dir()} for log files")
     
     # Test cleanup
     print("\nTesting log cleanup...")
