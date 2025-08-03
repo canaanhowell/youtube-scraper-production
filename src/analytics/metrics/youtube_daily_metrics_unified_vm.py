@@ -204,10 +204,72 @@ class YouTubeDailyMetricsUnified:
                 daily_metric['acceleration'] = 0
                 daily_metric['previous_video_count'] = 0
         else:
-            # First daily metric
-            daily_metric['velocity'] = 0
-            daily_metric['acceleration'] = 0
-            daily_metric['previous_video_count'] = 0
+            # No previous keyword daily metrics found - check category snapshots as fallback
+            prev_date = date - timedelta(days=1)
+            prev_date_str = str(prev_date)
+            
+            # Get the keyword's category from the keyword document
+            keyword_doc = self.db.collection('youtube_keywords').document(keyword_id).get()
+            keyword_category = None
+            if keyword_doc.exists:
+                keyword_category = keyword_doc.to_dict().get('category')
+            
+            if keyword_category:
+                # Try to find previous day data in category snapshots
+                category_ref = self.db.collection('youtube_categories').document(keyword_category)
+                
+                # Check daily_snapshots_7d first (most likely to exist)
+                snapshot_ref = category_ref.collection('daily_snapshots_7d').document(prev_date_str)
+                snapshot = snapshot_ref.get()
+                
+                if snapshot.exists:
+                    snapshot_data = snapshot.to_dict()
+                    keywords_data = snapshot_data.get('keywords_data', {})
+                    
+                    # Check both the keyword and keyword_id since snapshots might use either
+                    keyword_in_snapshot = None
+                    if keyword in keywords_data:
+                        keyword_in_snapshot = keyword
+                    elif keyword_id in keywords_data:
+                        keyword_in_snapshot = keyword_id
+                    # Also check with underscores replaced by spaces
+                    elif keyword_id.replace('_', ' ') in keywords_data:
+                        keyword_in_snapshot = keyword_id.replace('_', ' ')
+                    
+                    if keyword_in_snapshot:
+                        # Found previous day data in category snapshot
+                        keyword_data = keywords_data[keyword_in_snapshot]
+                        # Check different possible field names for video count
+                        prev_video_count = keyword_data.get('post_count') or keyword_data.get('videos') or keyword_data.get('video_count', 0)
+                        
+                        if prev_video_count is not None:
+                            logger.info(f"  Using category snapshot fallback for {keyword} velocity calculation")
+                            logger.info(f"  Previous day ({prev_date_str}) video count from snapshot: {prev_video_count}")
+                            
+                            daily_metric['previous_video_count'] = prev_video_count
+                            daily_metric['velocity'] = video_count - prev_video_count
+                            daily_metric['acceleration'] = 0  # Can't calculate without 2 days of data
+                        else:
+                            # No video count in snapshot
+                            daily_metric['velocity'] = 0
+                            daily_metric['acceleration'] = 0
+                            daily_metric['previous_video_count'] = 0
+                    else:
+                        # Keyword not in snapshot
+                        logger.info(f"  No previous day data for {keyword} in category snapshot")
+                        daily_metric['velocity'] = 0
+                        daily_metric['acceleration'] = 0
+                        daily_metric['previous_video_count'] = 0
+                else:
+                    # No category snapshot for previous day
+                    daily_metric['velocity'] = 0
+                    daily_metric['acceleration'] = 0
+                    daily_metric['previous_video_count'] = 0
+            else:
+                # Couldn't determine category
+                daily_metric['velocity'] = 0
+                daily_metric['acceleration'] = 0
+                daily_metric['previous_video_count'] = 0
         
         # Save daily metric with date as document ID
         doc_id = str(date)  # e.g., "2025-08-01"
