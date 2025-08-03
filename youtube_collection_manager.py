@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple
 
 # Ensure proper imports
-sys.path.insert(0, '/opt/youtube_scraper')
+sys.path.insert(0, '/opt/youtube_app')
 
 # Import modules
 from src.utils.env_loader import load_env
@@ -35,7 +35,7 @@ except ImportError:
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('/opt/youtube_scraper/logs/collection_manager.log'),
+            logging.FileHandler('/opt/youtube_app/logs/collection_manager.log'),
             logging.StreamHandler()
         ]
     )
@@ -62,7 +62,7 @@ class YouTubeCollectionManager:
             
             # Docker settings
             self.container_name = 'youtube-vpn'
-            self.docker_compose_path = Path('/opt/youtube_scraper/docker-compose.yml')
+            self.docker_compose_path = Path('/opt/youtube_app/docker-compose.yml')
             
             # Collection tracking
             self.session_id = f"session_{int(time.time())}"

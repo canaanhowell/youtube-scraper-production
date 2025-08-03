@@ -28,7 +28,7 @@ except ImportError:
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('/opt/youtube_scraper/logs/scraper.log'),
+            logging.FileHandler('/opt/youtube_app/logs/scraper.log'),
             logging.StreamHandler()
         ]
     )
