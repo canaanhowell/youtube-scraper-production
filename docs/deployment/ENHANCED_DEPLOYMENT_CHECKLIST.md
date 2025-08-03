@@ -13,7 +13,7 @@
 
 ### 2. VM Preparation
 - [ ] SSH key authentication configured
-- [ ] Project directory exists: `/opt/youtube_scraper`
+- [ ] Project directory exists: `/opt/youtube_app`
 - [ ] Git repository cloned and configured
 - [ ] Basic requirements installed (Python 3.13+, venv)
 
@@ -71,7 +71,7 @@ git push origin main
 
 # Or check on VM directly:
 ssh -i /workspace/droplet1 root@134.199.201.56
-cd /opt/youtube_scraper
+cd /opt/youtube_app
 
 # View deployment logs
 tail -f /var/log/youtube_deploy.log
@@ -151,7 +151,7 @@ python3 deployment/scripts/service_detector.py
 ### Manual Rollback
 ```bash
 ssh -i /workspace/droplet1 root@134.199.201.56
-cd /opt/youtube_scraper
+cd /opt/youtube_app
 
 # Rollback to latest backup
 python3 deployment/scripts/backup_manager.py rollback
@@ -164,7 +164,7 @@ python3 deployment/scripts/backup_manager.py rollback --name backup_auto_2025080
 ### Nuclear Option (Complete Reset)
 ```bash
 # If everything is broken:
-cd /opt/youtube_scraper
+cd /opt/youtube_app
 git reset --hard origin/main
 sudo systemctl restart youtube-scraper
 ```

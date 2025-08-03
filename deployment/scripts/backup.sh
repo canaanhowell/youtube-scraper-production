@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-DEPLOYMENT_PATH="/opt/youtube_scraper"
+DEPLOYMENT_PATH="/opt/youtube_app"
 BACKUP_BASE_DIR="$DEPLOYMENT_PATH/backups"
 LOG_FILE="$DEPLOYMENT_PATH/logs/backup.log"
 RETENTION_DAYS=30

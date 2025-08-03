@@ -230,7 +230,7 @@ sudo systemctl restart youtube-monitoring
 ssh -i /workspace/droplet1 root@134.199.201.56
 
 # Navigate to deployment directory
-cd /opt/youtube_scraper
+cd /opt/youtube_app
 
 # Run deployment script
 ./deployment/scripts/deploy.sh
@@ -275,10 +275,10 @@ systemctl is-active youtube-scraper
 ### Log Management
 
 **Log Locations:**
-- `/opt/youtube_scraper/logs/app.log` - Application logs
-- `/opt/youtube_scraper/logs/error.log` - Error logs
-- `/opt/youtube_scraper/logs/analytics.log` - Analytics logs
-- `/opt/youtube_scraper/logs/deployment.log` - Deployment logs
+- `/opt/youtube_app/logs/app.log` - Application logs
+- `/opt/youtube_app/logs/error.log` - Error logs
+- `/opt/youtube_app/logs/analytics.log` - Analytics logs
+- `/opt/youtube_app/logs/deployment.log` - Deployment logs
 
 **Log Rotation:**
 - Automatic rotation at 100MB
@@ -293,7 +293,7 @@ python3 monitor_containers.py
 
 # View system performance
 top -p $(pgrep -f youtube)
-df -h /opt/youtube_scraper
+df -h /opt/youtube_app
 ```
 
 ## Security
@@ -326,7 +326,7 @@ df -h /opt/youtube_scraper
 **Deployment Failures:**
 ```bash
 # Check deployment logs
-tail -f /opt/youtube_scraper/logs/deployment.log
+tail -f /opt/youtube_app/logs/deployment.log
 
 # Verify GitHub Actions
 # Check workflow run in GitHub repository
@@ -341,7 +341,7 @@ tail -f /opt/youtube_scraper/logs/deployment.log
 sudo systemctl status youtube-scraper --no-pager -l
 
 # Check application logs
-tail -f /opt/youtube_scraper/logs/error.log
+tail -f /opt/youtube_app/logs/error.log
 
 # Restart services
 sudo systemctl restart youtube-scraper

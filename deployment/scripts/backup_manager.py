@@ -30,9 +30,9 @@ logger = logging.getLogger(__name__)
 class BackupManager:
     """Manages automatic backups and rollbacks"""
     
-    def __init__(self, project_dir: str = "/opt/youtube_scraper"):
+    def __init__(self, project_dir: str = "/opt/youtube_app"):
         self.project_dir = Path(project_dir)
-        self.backup_dir = Path("/opt/youtube_scraper_backups")
+        self.backup_dir = Path("/opt/youtube_app_backups")
         self.backup_dir.mkdir(parents=True, exist_ok=True)
         
         self.metadata_file = self.backup_dir / "backup_metadata.json"

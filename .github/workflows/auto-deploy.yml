@@ -34,7 +34,7 @@ jobs:
           echo "🚀 Starting smart deployment..."
           
           # Navigate to project directory
-          cd /opt/youtube_scraper
+          cd /opt/youtube_app
           
           # Pull latest changes
           echo "📥 Pulling latest changes..."
@@ -59,7 +59,7 @@ jobs:
         ssh -i ~/.ssh/id_rsa root@134.199.201.56 << 'EOF'
           echo "🔍 Verifying deployment..."
           
-          cd /opt/youtube_scraper
+          cd /opt/youtube_app
           
           # Check core service
           if systemctl is-active youtube-scraper >/dev/null 2>&1; then

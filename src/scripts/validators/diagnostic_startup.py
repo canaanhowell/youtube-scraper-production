@@ -1,7 +1,7 @@
 #\!/usr/bin/env python3
 import sys
 import os
-sys.path.insert(0, '/opt/youtube_scraper')
+sys.path.insert(0, '/opt/youtube_app')
 
 print(f"Python executable: {sys.executable}")
 print(f"Python version: {sys.version}")
@@ -18,7 +18,7 @@ except Exception as e:
     print(f"Error importing FirebaseClient: {e}")
 
 # Test instantiation with env vars
-os.environ['GOOGLE_SERVICE_KEY_PATH'] = '/opt/youtube_scraper/ai-tracker-466821-892ecf5150a3.json'
+os.environ['GOOGLE_SERVICE_KEY_PATH'] = '/opt/youtube_app/ai-tracker-466821-892ecf5150a3.json'
 try:
     fc = FirebaseClient()
     print("FirebaseClient instantiated successfully")

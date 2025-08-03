@@ -6,7 +6,7 @@
 set -e  # Exit on any error
 
 # Configuration
-DEPLOYMENT_PATH="/opt/youtube_scraper"
+DEPLOYMENT_PATH="/opt/youtube_app"
 BACKUP_DIR="$DEPLOYMENT_PATH/backups"
 LOG_FILE="$DEPLOYMENT_PATH/logs/deployment.log"
 SERVICES=("youtube-scraper" "youtube-analytics")

@@ -5,11 +5,11 @@
 echo "Setting up YouTube scraper on droplet2..."
 
 # Create necessary directories
-mkdir -p /opt/youtube_scraper/{src,data,logs}
-mkdir -p /opt/youtube_scraper/src/{scripts,utils,config}
+mkdir -p /opt/youtube_app/{src,data,logs}
+mkdir -p /opt/youtube_app/src/{scripts,utils,config}
 
 # Activate virtual environment
-cd /opt/youtube_scraper
+cd /opt/youtube_app
 source venv/bin/activate
 
 # Install Python dependencies

@@ -1,7 +1,7 @@
 #\!/usr/bin/env python3
 '''Run collection with limited keywords to ensure completion'''
 import sys
-sys.path.insert(0, '/opt/youtube_scraper')
+sys.path.insert(0, '/opt/youtube_app')
 
 from youtube_collection_manager import YouTubeCollectionManager
 import logging

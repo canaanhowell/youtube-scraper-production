@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-DEPLOYMENT_PATH="/opt/youtube_scraper"
+DEPLOYMENT_PATH="/opt/youtube_app"
 LOG_FILE="$DEPLOYMENT_PATH/logs/health_check.log"
 SERVICES=("youtube-scraper" "youtube-analytics")
 CRITICAL_PROCESSES=("python3")

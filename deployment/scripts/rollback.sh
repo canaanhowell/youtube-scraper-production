@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-DEPLOYMENT_PATH="/opt/youtube_scraper"
+DEPLOYMENT_PATH="/opt/youtube_app"
 BACKUP_BASE_DIR="$DEPLOYMENT_PATH/backups"
 LOG_FILE="$DEPLOYMENT_PATH/logs/rollback.log"
 SERVICES=("youtube-scraper" "youtube-analytics")

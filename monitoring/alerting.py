@@ -118,7 +118,7 @@ class SystemMetrics:
 class ApplicationMetrics:
     """Collects application-specific metrics"""
     
-    def __init__(self, log_dir: str = "/opt/youtube_scraper/logs"):
+    def __init__(self, log_dir: str = "/opt/youtube_app/logs"):
         self.log_dir = Path(log_dir)
         self.logger = logging.getLogger(__name__)
     
@@ -227,7 +227,7 @@ class ApplicationMetrics:
 class AlertManager:
     """Manages alert generation and delivery"""
     
-    def __init__(self, config_path: str = "/opt/youtube_scraper/monitoring/alert_config.json"):
+    def __init__(self, config_path: str = "/opt/youtube_app/monitoring/alert_config.json"):
         self.config_path = Path(config_path)
         self.logger = logging.getLogger(__name__)
         self.active_alerts: List[Alert] = []
@@ -464,7 +464,7 @@ Please investigate immediately if this is a critical alert.
 class MonitoringDashboard:
     """Creates monitoring dashboard and reports"""
     
-    def __init__(self, output_dir: str = "/opt/youtube_scraper/monitoring/reports"):
+    def __init__(self, output_dir: str = "/opt/youtube_app/monitoring/reports"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.logger = logging.getLogger(__name__)

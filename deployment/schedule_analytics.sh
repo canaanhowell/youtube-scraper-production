@@ -1,7 +1,7 @@
 #!/bin/bash
 # Cron job wrapper for YouTube analytics
 # Add to crontab:
-# 0 */2 * * * /opt/youtube_scraper/schedule_analytics.sh >> /opt/youtube_scraper/logs/cron_analytics.log 2>&1
+# 0 */2 * * * /opt/youtube_app/schedule_analytics.sh >> /opt/youtube_app/logs/cron_analytics.log 2>&1
 
 set -e
 

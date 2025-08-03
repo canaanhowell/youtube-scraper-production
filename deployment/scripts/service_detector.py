@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class ServiceDetector:
     """Detects and auto-configures services based on file patterns"""
     
-    def __init__(self, project_dir: str = "/opt/youtube_scraper"):
+    def __init__(self, project_dir: str = "/opt/youtube_app"):
         self.project_dir = Path(project_dir)
         self.systemd_dir = Path("/etc/systemd/system")
         self.service_config_file = self.project_dir / "deployment" / "auto_services.json"

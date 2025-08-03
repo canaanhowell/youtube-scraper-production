@@ -552,7 +552,7 @@ def main():
     parser = argparse.ArgumentParser(description='YouTube Scraper Database Migration Tool')
     parser.add_argument('--service-account', required=True, help='Path to Firebase service account JSON')
     parser.add_argument('--project-id', required=True, help='Firebase project ID')
-    parser.add_argument('--backup-dir', type=Path, default=Path('/opt/youtube_scraper/backups/database'),
+    parser.add_argument('--backup-dir', type=Path, default=Path('/opt/youtube_app/backups/database'),
                        help='Directory for database backups')
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')

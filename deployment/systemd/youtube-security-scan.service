@@ -8,9 +8,9 @@ Wants=network.target
 Type=oneshot
 User=youtube-scraper
 Group=youtube-scraper
-WorkingDirectory=/opt/youtube_scraper
-Environment=PYTHONPATH=/opt/youtube_scraper
-Environment=PATH=/opt/youtube_scraper/venv/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=/opt/youtube_app
+Environment=PYTHONPATH=/opt/youtube_app
+Environment=PATH=/opt/youtube_app/venv/bin:/usr/local/bin:/usr/bin:/bin
 
 # Security scanning command
 ExecStart=/bin/bash -c 'source venv/bin/activate && python3 security/scanner.py --project-root . --output-dir security/reports'
@@ -24,8 +24,8 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/youtube_scraper/security/reports
-ReadWritePaths=/opt/youtube_scraper/logs
+ReadWritePaths=/opt/youtube_app/security/reports
+ReadWritePaths=/opt/youtube_app/logs
 
 # Logging
 StandardOutput=journal

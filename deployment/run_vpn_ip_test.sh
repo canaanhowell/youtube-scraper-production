@@ -9,8 +9,8 @@ echo "with cache clearing between connections to ensure fresh IPs."
 echo ""
 
 # Check if running on VM
-if [[ ! -f "/opt/youtube_scraper/.env" ]]; then
-    echo "ERROR: This script must be run on the VM at /opt/youtube_scraper"
+if [[ ! -f "/opt/youtube_app/.env" ]]; then
+    echo "ERROR: This script must be run on the VM at /opt/youtube_app"
     echo "SSH to VM first: ssh -i /workspace/droplet1 root@134.199.201.56"
     exit 1
 fi
@@ -18,7 +18,7 @@ fi
 # Parse arguments
 MODE=${1:-quick}
 
-cd /opt/youtube_scraper
+cd /opt/youtube_app
 
 case $MODE in
     quick)

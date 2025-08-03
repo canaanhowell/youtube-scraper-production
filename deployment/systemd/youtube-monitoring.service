@@ -8,16 +8,16 @@ Wants=network.target
 Type=oneshot
 User=root
 Group=root
-WorkingDirectory=/opt/youtube_scraper
+WorkingDirectory=/opt/youtube_app
 
 # Environment
-Environment=PYTHONPATH=/opt/youtube_scraper
+Environment=PYTHONPATH=/opt/youtube_app
 Environment=PYTHONUNBUFFERED=1
-EnvironmentFile=/opt/youtube_scraper/.env
+EnvironmentFile=/opt/youtube_app/.env
 
 # Enhanced monitoring with alerting
 ExecStart=/bin/bash -c 'source venv/bin/activate && python3 monitoring/alerting.py'
-ExecStartPost=/opt/youtube_scraper/deployment/scripts/health_check.sh
+ExecStartPost=/opt/youtube_app/deployment/scripts/health_check.sh
 
 # Process management
 TimeoutStartSec=300
@@ -33,12 +33,12 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/youtube_scraper/logs /opt/youtube_scraper/tmp
-ReadWritePaths=/opt/youtube_scraper/monitoring/reports
+ReadWritePaths=/opt/youtube_app/logs /opt/youtube_app/tmp
+ReadWritePaths=/opt/youtube_app/monitoring/reports
 
 # Logging
-StandardOutput=append:/opt/youtube_scraper/logs/monitoring-service.log
-StandardError=append:/opt/youtube_scraper/logs/monitoring-service-error.log
+StandardOutput=append:/opt/youtube_app/logs/monitoring-service.log
+StandardError=append:/opt/youtube_app/logs/monitoring-service-error.log
 SyslogIdentifier=youtube-monitoring
 
 [Install]

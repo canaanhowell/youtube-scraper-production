@@ -15,8 +15,8 @@ from typing import Tuple
 def get_default_log_dir():
     """Get the appropriate log directory based on environment"""
     # Check if running on production VM
-    if Path("/opt/youtube_scraper").exists():
-        return "/opt/youtube_scraper/logs"
+    if Path("/opt/youtube_app").exists():
+        return "/opt/youtube_app/logs"
     # Use local directory for development
     else:
         return str(Path.cwd() / "logs")

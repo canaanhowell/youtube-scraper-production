@@ -9,16 +9,16 @@ Requires=docker.service
 Type=forking
 User=root
 Group=root
-WorkingDirectory=/opt/youtube_scraper
+WorkingDirectory=/opt/youtube_app
 
 # Environment
-Environment=PYTHONPATH=/opt/youtube_scraper
+Environment=PYTHONPATH=/opt/youtube_app
 Environment=PYTHONUNBUFFERED=1
-EnvironmentFile=/opt/youtube_scraper/.env
+EnvironmentFile=/opt/youtube_app/.env
 
 # Virtual environment activation and script execution
-ExecStartPre=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python -c "from src.utils.env_loader import load_env; load_env(); print(\"Environment loaded\")"'
-ExecStart=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python youtube_collection_manager.py'
+ExecStartPre=/bin/bash -c 'cd /opt/youtube_app && source venv/bin/activate && python -c "from src.utils.env_loader import load_env; load_env(); print(\"Environment loaded\")"'
+ExecStart=/bin/bash -c 'cd /opt/youtube_app && source venv/bin/activate && python youtube_collection_manager.py'
 ExecReload=/bin/kill -HUP $MAINPID
 
 # Process management
@@ -39,11 +39,11 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/youtube_scraper/logs /opt/youtube_scraper/tmp /var/log
+ReadWritePaths=/opt/youtube_app/logs /opt/youtube_app/tmp /var/log
 
 # Logging
-StandardOutput=append:/opt/youtube_scraper/logs/scraper-service.log
-StandardError=append:/opt/youtube_scraper/logs/scraper-service-error.log
+StandardOutput=append:/opt/youtube_app/logs/scraper-service.log
+StandardError=append:/opt/youtube_app/logs/scraper-service-error.log
 SyslogIdentifier=youtube-scraper
 
 # Health monitoring

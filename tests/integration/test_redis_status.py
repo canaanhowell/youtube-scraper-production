@@ -5,7 +5,7 @@ import sys
 import time
 
 # Load environment
-sys.path.insert(0, '/opt/youtube_scraper')
+sys.path.insert(0, '/opt/youtube_app')
 from src.utils.env_loader import load_env
 load_env()
 

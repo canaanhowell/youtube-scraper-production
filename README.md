@@ -112,9 +112,9 @@ FIRESTORE_PROJECT_ID=your-project-id
 UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-token
 
-# VPN
-SURFSHARK_USER=your@email.com
-SURFSHARK_PASSWORD=your-password
+# VPN WireGuard Configuration
+SURFSHARK_PRIVATE_KEY=your-wireguard-private-key
+SURFSHARK_ADDRESS=10.14.0.2/16
 
 # App Settings
 ENVIRONMENT=production
@@ -147,7 +147,11 @@ tail -f logs/scraper.log
 
 ### View Metrics
 ```bash
-python3 get_firebase_stats_fixed.py
+# Check collection logs in Firebase
+python3 src/scripts/utilities/check_collection.py
+
+# Monitor VPN IP diversity
+python3 src/scripts/utilities/monitor_vpn_ips.py
 ```
 
 ## Troubleshooting
@@ -158,7 +162,7 @@ python3 get_firebase_stats_fixed.py
    - Ensure `.env` has correct `GOOGLE_SERVICE_KEY_PATH`
    - Verify Firebase JSON file exists at that path
 
-2. **"No such file or directory: /opt/youtube_scraper"**
+2. **"No such file or directory: /opt/youtube_app"**
    - Project renamed to `youtube_app`
    - Update any scripts using old path
 

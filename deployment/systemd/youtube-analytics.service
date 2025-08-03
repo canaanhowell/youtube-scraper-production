@@ -8,16 +8,16 @@ Wants=network.target
 Type=oneshot
 User=root
 Group=root
-WorkingDirectory=/opt/youtube_scraper
+WorkingDirectory=/opt/youtube_app
 
 # Environment
-Environment=PYTHONPATH=/opt/youtube_scraper
+Environment=PYTHONPATH=/opt/youtube_app
 Environment=PYTHONUNBUFFERED=1
-EnvironmentFile=/opt/youtube_scraper/.env
+EnvironmentFile=/opt/youtube_app/.env
 
 # Virtual environment activation and analytics execution
-ExecStartPre=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python -c "from src.utils.env_loader import load_env; load_env(); print(\"Analytics environment loaded\")"'
-ExecStart=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python src/scripts/collectors/run_analytics.py --task all'
+ExecStartPre=/bin/bash -c 'cd /opt/youtube_app && source venv/bin/activate && python -c "from src.utils.env_loader import load_env; load_env(); print(\"Analytics environment loaded\")"'
+ExecStart=/bin/bash -c 'cd /opt/youtube_app && source venv/bin/activate && python src/scripts/collectors/run_analytics.py --task all'
 
 # Process management
 TimeoutStartSec=1800
@@ -33,11 +33,11 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/youtube_scraper/logs /opt/youtube_scraper/tmp
+ReadWritePaths=/opt/youtube_app/logs /opt/youtube_app/tmp
 
 # Logging
-StandardOutput=append:/opt/youtube_scraper/logs/analytics-service.log
-StandardError=append:/opt/youtube_scraper/logs/analytics-service-error.log
+StandardOutput=append:/opt/youtube_app/logs/analytics-service.log
+StandardError=append:/opt/youtube_app/logs/analytics-service-error.log
 SyslogIdentifier=youtube-analytics
 
 [Install]

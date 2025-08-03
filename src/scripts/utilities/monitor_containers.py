@@ -16,7 +16,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('/opt/youtube_scraper/logs/container_monitor.log'),
+        logging.FileHandler('/opt/youtube_app/logs/container_monitor.log'),
         logging.StreamHandler()
     ]
 )

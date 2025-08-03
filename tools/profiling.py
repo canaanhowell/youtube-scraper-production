@@ -36,7 +36,7 @@ class PerformanceMetric:
 class PerformanceProfiler:
     """Main performance profiling class"""
     
-    def __init__(self, output_dir: str = "/opt/youtube_scraper/profiling"):
+    def __init__(self, output_dir: str = "/opt/youtube_app/profiling"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.metrics: List[PerformanceMetric] = []

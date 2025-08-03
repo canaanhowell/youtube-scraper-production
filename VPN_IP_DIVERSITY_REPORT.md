@@ -72,7 +72,7 @@ With 24 city codes:
 ssh -i /workspace/droplet1 root@134.199.201.56
 
 # Run quick test
-cd /opt/youtube_scraper
+cd /opt/youtube_app
 ./run_vpn_ip_test.sh quick
 ```
 

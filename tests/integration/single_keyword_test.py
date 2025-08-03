@@ -1,7 +1,7 @@
 #\!/usr/bin/env python3
 '''Test collection with single keyword to demonstrate complete flow'''
 import sys
-sys.path.insert(0, '/opt/youtube_scraper')
+sys.path.insert(0, '/opt/youtube_app')
 
 from youtube_collection_manager import YouTubeCollectionManager
 import logging

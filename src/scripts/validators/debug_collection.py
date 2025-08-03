@@ -1,6 +1,6 @@
 #\!/usr/bin/env python3
 import sys
-sys.path.insert(0, '/opt/youtube_scraper')
+sys.path.insert(0, '/opt/youtube_app')
 
 from src.utils.firebase_client import FirebaseClient
 from src.utils.redis_client import RedisClient

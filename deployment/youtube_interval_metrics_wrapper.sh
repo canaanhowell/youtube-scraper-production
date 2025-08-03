@@ -2,9 +2,9 @@
 # YouTube interval metrics collection wrapper script
 # Runs after hourly YouTube collection to calculate metrics
 
-LOG_FILE="/opt/youtube_scraper/logs/interval_metrics.log"
-LOCK_FILE="/opt/youtube_scraper/interval_metrics.lock"
-SCRIPT_DIR="/opt/youtube_scraper"
+LOG_FILE="/opt/youtube_app/logs/interval_metrics.log"
+LOCK_FILE="/opt/youtube_app/interval_metrics.lock"
+SCRIPT_DIR="/opt/youtube_app"
 
 # Create log directory if it doesn't exist
 mkdir -p "$(dirname "$LOG_FILE")"

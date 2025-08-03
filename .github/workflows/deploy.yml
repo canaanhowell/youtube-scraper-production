@@ -12,7 +12,7 @@ on:
         type: boolean
 
 env:
-  DEPLOYMENT_PATH: /opt/youtube_scraper
+  DEPLOYMENT_PATH: /opt/youtube_app
   BACKUP_RETENTION_DAYS: 7
 
 jobs:

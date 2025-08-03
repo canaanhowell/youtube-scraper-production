@@ -23,7 +23,7 @@ class WireGuardManager:
     def __init__(self):
         self.current_server = None
         self.current_ip = None
-        self.cache_file = Path("/opt/youtube_scraper/vpn_cache.json")
+        self.cache_file = Path("/opt/youtube_app/vpn_cache.json")
         self.wg_config_dir = Path("/etc/wireguard")
         self.wg_config_dir.mkdir(exist_ok=True)
         

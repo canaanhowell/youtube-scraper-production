@@ -15,7 +15,7 @@ from src.utils.logging_config_enhanced import cleanup_old_log_files
 if __name__ == "__main__":
     print("Starting log cleanup...")
     cleanup_old_log_files(
-        log_dir="/opt/youtube_scraper/logs",
+        log_dir="/opt/youtube_app/logs",
         days_old=7
     )
     print("Log cleanup completed.")

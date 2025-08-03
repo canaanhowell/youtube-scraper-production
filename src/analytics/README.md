@@ -64,7 +64,7 @@ python3 src/scripts/collectors/run_full_pipeline.py
 Add to crontab for automated analytics:
 ```bash
 # Run analytics every 2 hours
-0 */2 * * * /opt/youtube_scraper/deployment/schedule_analytics.sh
+0 */2 * * * /opt/youtube_app/deployment/schedule_analytics.sh
 ```
 
 ## Configuration

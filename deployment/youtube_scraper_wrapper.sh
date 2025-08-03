@@ -2,7 +2,7 @@
 # YouTube Scraper Wrapper with Lock File Protection
 
 LOCKFILE="/var/run/youtube_scraper.lock"
-LOGFILE="/opt/youtube_scraper/logs/wrapper.log"
+LOGFILE="/opt/youtube_app/logs/wrapper.log"
 
 # Function to log messages
 log() {
@@ -32,13 +32,13 @@ log "Starting YouTube scraper (PID: $$)"
 trap 'rm -f "$LOCKFILE"; log "Scraper finished, lock file removed"' EXIT
 
 # Change to project directory
-cd /opt/youtube_scraper || exit 1
+cd /opt/youtube_app || exit 1
 
 # Activate virtual environment
 source venv/bin/activate
 
 # Export environment variables
-export GOOGLE_SERVICE_KEY_PATH="/opt/youtube_scraper/ai-tracker-466821-892ecf5150a3.json"
+export GOOGLE_SERVICE_KEY_PATH="/opt/youtube_app/ai-tracker-466821-892ecf5150a3.json"
 export UPSTASH_REDIS_REST_URL="https://gusc1-capital-mole-32245.upstash.io"
 export UPSTASH_REDIS_REST_TOKEN="AX31ASQgMGJjZjA4YzEtYzZkMC00ZmE2LWE0ZDgtYTMzZmEzZThkMmE2NjJlODU4Y2I5ZjMxNDc2NGFkYzM0NDhlODdiOTBiMjA="
 

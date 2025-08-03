@@ -31,7 +31,7 @@ class VPNIPRotationTester:
     
     def __init__(self):
         self.container_name = 'youtube-vpn'
-        self.docker_compose_path = Path('/opt/youtube_scraper/docker-compose.yml')
+        self.docker_compose_path = Path('/opt/youtube_app/docker-compose.yml')
         self.results = {
             'start_time': datetime.now().isoformat(),
             'servers': {},
@@ -302,7 +302,7 @@ def main():
     args = parser.parse_args()
     
     # Load environment
-    sys.path.insert(0, '/opt/youtube_scraper')
+    sys.path.insert(0, '/opt/youtube_app')
     from src.utils.env_loader import load_env
     load_env()
     

@@ -18,7 +18,7 @@ class SurfsharkServers:
     """Manages Surfshark server discovery and configuration"""
     
     def __init__(self):
-        self.cache_file = Path("/opt/youtube_scraper/surfshark_servers.json")
+        self.cache_file = Path("/opt/youtube_app/surfshark_servers.json")
         self.servers = []
         self.load_servers()
     
