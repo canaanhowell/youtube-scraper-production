@@ -30,3 +30,30 @@ pytz>=2023.3
 # Additional utilities
 # time, datetime - built-in
 # typing - built-in
+
+# Analytics dependencies
+playwright>=1.40.0       # For enhanced scraping capabilities
+numpy>=1.24.0           # For numerical computations in metrics
+aiofiles>=23.0.0        # For async file operations
+colorama>=0.4.6         # For colored console output
+
+# Enhanced DevOps Tool Dependencies
+# Monitoring and alerting
+psutil>=5.9.0           # System resource monitoring
+requests>=2.31.0        # HTTP requests for webhooks/APIs (already listed above)
+
+# Security scanning
+bandit>=1.7.5           # Python code security scanner
+safety>=2.3.0           # Dependency vulnerability scanner
+pip-audit>=2.6.0        # Alternative dependency scanner
+
+# Performance profiling
+memory-profiler>=0.61.0 # Memory usage profiling
+line-profiler>=4.1.0    # Line-by-line profiling
+
+# Load testing
+locust>=2.17.0          # Load testing framework
+
+# Configuration and data processing
+pyyaml>=6.0.0           # YAML configuration files
+jsonschema>=4.19.0      # JSON schema validation

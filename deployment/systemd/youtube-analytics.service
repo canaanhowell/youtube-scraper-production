@@ -1,0 +1,44 @@
+[Unit]
+Description=YouTube Analytics Processing Service
+Documentation=https://github.com/canaanhowell/youtube-scraper-production
+After=network.target youtube-scraper.service
+Wants=network.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/youtube_scraper
+
+# Environment
+Environment=PYTHONPATH=/opt/youtube_scraper
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/opt/youtube_scraper/.env
+
+# Virtual environment activation and analytics execution
+ExecStartPre=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python -c "from src.utils.env_loader import load_env; load_env(); print(\"Analytics environment loaded\")"'
+ExecStart=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python src/scripts/collectors/run_analytics.py --task all'
+
+# Process management
+TimeoutStartSec=1800
+TimeoutStopSec=60
+RemainAfterExit=no
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=2048
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/youtube_scraper/logs /opt/youtube_scraper/tmp
+
+# Logging
+StandardOutput=append:/opt/youtube_scraper/logs/analytics-service.log
+StandardError=append:/opt/youtube_scraper/logs/analytics-service-error.log
+SyslogIdentifier=youtube-analytics
+
+[Install]
+WantedBy=multi-user.target

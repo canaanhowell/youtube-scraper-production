@@ -1,0 +1,41 @@
+[Unit]
+Description=YouTube Scraper Performance Check
+Documentation=https://github.com/canaanhowell/youtube-scraper-production
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+User=youtube-scraper
+Group=youtube-scraper
+WorkingDirectory=/opt/youtube_scraper
+Environment=PYTHONPATH=/opt/youtube_scraper
+Environment=PATH=/opt/youtube_scraper/venv/bin:/usr/local/bin:/usr/bin:/bin
+
+# Performance check command
+ExecStart=/bin/bash -c 'source venv/bin/activate && python3 tools/load_testing.py --test-type keywords --workers 5'
+
+# Resource limits
+MemoryMax=2G
+CPUQuota=75%
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/youtube_scraper/tools/load_test_reports
+ReadWritePaths=/opt/youtube_scraper/tools/profiling_reports
+ReadWritePaths=/opt/youtube_scraper/logs
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=youtube-performance-check
+
+# Timeout and restart settings
+TimeoutStartSec=600
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

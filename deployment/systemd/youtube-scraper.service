@@ -1,0 +1,54 @@
+[Unit]
+Description=YouTube Scraper Production Service
+Documentation=https://github.com/canaanhowell/youtube-scraper-production
+After=network.target docker.service
+Wants=network.target
+Requires=docker.service
+
+[Service]
+Type=forking
+User=root
+Group=root
+WorkingDirectory=/opt/youtube_scraper
+
+# Environment
+Environment=PYTHONPATH=/opt/youtube_scraper
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/opt/youtube_scraper/.env
+
+# Virtual environment activation and script execution
+ExecStartPre=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python -c "from src.utils.env_loader import load_env; load_env(); print(\"Environment loaded\")"'
+ExecStart=/bin/bash -c 'cd /opt/youtube_scraper && source venv/bin/activate && python youtube_collection_manager.py'
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Process management
+PIDFile=/var/run/youtube-scraper.pid
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+RestartSec=10
+Restart=on-failure
+RestartPreventExitStatus=0
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/youtube_scraper/logs /opt/youtube_scraper/tmp /var/log
+
+# Logging
+StandardOutput=append:/opt/youtube_scraper/logs/scraper-service.log
+StandardError=append:/opt/youtube_scraper/logs/scraper-service-error.log
+SyslogIdentifier=youtube-scraper
+
+# Health monitoring
+WatchdogSec=300
+NotifyAccess=none
+
+[Install]
+WantedBy=multi-user.target

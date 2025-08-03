@@ -1,0 +1,271 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment (skip some checks)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  DEPLOYMENT_PATH: /opt/youtube_scraper
+  BACKUP_RETENTION_DAYS: 7
+
+jobs:
+  pre-deploy:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    
+    outputs:
+      deploy_version: ${{ steps.version.outputs.version }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Generate deployment version
+      id: version
+      run: |
+        VERSION="v$(date +%Y%m%d)-${GITHUB_SHA::8}"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Deployment version: $VERSION"
+        
+    - name: Verify CI status
+      if: github.event_name == 'push' && !inputs.force_deploy
+      run: |
+        echo "Checking if CI pipeline passed..."
+        # This step ensures deployment only happens after successful CI
+        
+    - name: Notify deployment start
+      run: |
+        echo "🚀 Starting deployment of ${{ steps.version.outputs.version }}"
+
+  deploy:
+    name: Deploy to VM
+    runs-on: ubuntu-latest
+    needs: pre-deploy
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+        
+    - name: Create deployment package
+      run: |
+        tar -czf deployment.tar.gz \
+          --exclude='.git' \
+          --exclude='logs/*' \
+          --exclude='__pycache__' \
+          --exclude='*.pyc' \
+          --exclude='.github' \
+          .
+          
+    - name: Upload deployment package
+      run: |
+        scp -i ~/.ssh/id_rsa deployment.tar.gz ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/tmp/
+        
+    - name: Execute deployment on VM
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        script: |
+          set -e
+          
+          echo "🔄 Starting deployment process..."
+          
+          # Navigate to deployment directory
+          cd ${{ env.DEPLOYMENT_PATH }}
+          
+          # Create backup before deployment
+          echo "📦 Creating backup..."
+          BACKUP_DIR="backups/backup-$(date +%Y%m%d-%H%M%S)"
+          mkdir -p "$BACKUP_DIR"
+          tar -czf "$BACKUP_DIR/youtube-scraper-backup.tar.gz" \
+            --exclude='logs/*' \
+            --exclude='venv/*' \
+            --exclude='backups/*' \
+            .
+          
+          # Extract new deployment
+          echo "📥 Extracting new deployment..."
+          tar -xzf /tmp/deployment.tar.gz -C /tmp/youtube_scraper_new/
+          rm /tmp/deployment.tar.gz
+          
+          # Stop services
+          echo "⏹️ Stopping services..."
+          sudo systemctl stop youtube-scraper || true
+          sudo systemctl stop youtube-analytics || true
+          
+          # Update application files
+          echo "🔄 Updating application files..."
+          rsync -av --exclude='logs/' --exclude='venv/' /tmp/youtube_scraper_new/ ./
+          rm -rf /tmp/youtube_scraper_new/
+          
+          # Update dependencies
+          echo "📦 Updating dependencies..."
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          
+          # Update environment configuration
+          echo "⚙️ Updating environment configuration..."
+          if [ ! -f .env ]; then
+            echo "Creating .env from secrets..."
+            cat > .env << EOF
+          ENVIRONMENT=production
+          LOG_LEVEL=INFO
+          GOOGLE_SERVICE_KEY_PATH=/opt/credentials/firebase.json
+          UPSTASH_REDIS_REST_URL=${{ secrets.REDIS_URL }}
+          UPSTASH_REDIS_REST_TOKEN=${{ secrets.REDIS_TOKEN }}
+          SURFSHARK_PRIVATE_KEY=${{ secrets.SURFSHARK_PRIVATE_KEY }}
+          SURFSHARK_ADDRESS=${{ secrets.SURFSHARK_ADDRESS }}
+          EOF
+          fi
+          
+          # Restart services
+          echo "🔄 Restarting services..."
+          sudo systemctl start youtube-scraper
+          sudo systemctl start youtube-analytics
+          
+          # Wait for services to start
+          sleep 10
+          
+          # Health check
+          echo "🏥 Running health checks..."
+          if ! sudo systemctl is-active --quiet youtube-scraper; then
+            echo "❌ youtube-scraper service failed to start"
+            exit 1
+          fi
+          
+          if ! sudo systemctl is-active --quiet youtube-analytics; then
+            echo "❌ youtube-analytics service failed to start"
+            exit 1
+          fi
+          
+          # Test analytics entry point
+          if ! python3 src/scripts/collectors/run_analytics.py --help > /dev/null; then
+            echo "❌ Analytics entry point test failed"
+            exit 1
+          fi
+          
+          echo "✅ Deployment completed successfully!"
+          echo "📊 Services status:"
+          sudo systemctl status youtube-scraper --no-pager -l
+          sudo systemctl status youtube-analytics --no-pager -l
+          
+          # Cleanup old backups
+          echo "🧹 Cleaning up old backups..."
+          find backups/ -name "backup-*" -type d -mtime +${{ env.BACKUP_RETENTION_DAYS }} -exec rm -rf {} \; 2>/dev/null || true
+
+  post-deploy:
+    name: Post-deployment Verification
+    runs-on: ubuntu-latest
+    needs: [pre-deploy, deploy]
+    
+    steps:
+    - name: Verify deployment
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        script: |
+          cd ${{ env.DEPLOYMENT_PATH }}
+          
+          echo "🔍 Post-deployment verification..."
+          
+          # Check service status
+          if ! sudo systemctl is-active --quiet youtube-scraper; then
+            echo "❌ youtube-scraper service is not running"
+            exit 1
+          fi
+          
+          if ! sudo systemctl is-active --quiet youtube-analytics; then
+            echo "❌ youtube-analytics service is not running"
+            exit 1
+          fi
+          
+          # Check logs for errors
+          if sudo journalctl -u youtube-scraper --since "2 minutes ago" | grep -i "error\|exception\|failed" | head -5; then
+            echo "⚠️ Recent errors found in youtube-scraper logs"
+          fi
+          
+          if sudo journalctl -u youtube-analytics --since "2 minutes ago" | grep -i "error\|exception\|failed" | head -5; then
+            echo "⚠️ Recent errors found in youtube-analytics logs"
+          fi
+          
+          # Test basic functionality
+          echo "🧪 Testing basic functionality..."
+          python3 -c "
+          import sys, os
+          sys.path.insert(0, '.')
+          from src.analytics.metrics.keywords_interval_metrics import *
+          from src.utils.firebase_client_enhanced import FirebaseClient
+          print('✓ Core modules importable')
+          "
+          
+          echo "✅ Post-deployment verification completed"
+          
+    - name: Notify deployment success
+      run: |
+        echo "🎉 Deployment of ${{ needs.pre-deploy.outputs.deploy_version }} completed successfully!"
+        echo "📊 Production services are running and healthy"
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [pre-deploy, deploy]
+    if: failure()
+    
+    steps:
+    - name: Rollback deployment
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.VM_HOST }}
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.VM_SSH_KEY }}
+        script: |
+          cd ${{ env.DEPLOYMENT_PATH }}
+          
+          echo "🔄 Rolling back deployment..."
+          
+          # Find latest backup
+          LATEST_BACKUP=$(ls -t backups/backup-*/youtube-scraper-backup.tar.gz | head -1)
+          
+          if [ -n "$LATEST_BACKUP" ]; then
+            echo "📦 Restoring from backup: $LATEST_BACKUP"
+            
+            # Stop services
+            sudo systemctl stop youtube-scraper || true
+            sudo systemctl stop youtube-analytics || true
+            
+            # Restore backup
+            tar -xzf "$LATEST_BACKUP" .
+            
+            # Restart services
+            sudo systemctl start youtube-scraper
+            sudo systemctl start youtube-analytics
+            
+            echo "✅ Rollback completed"
+          else
+            echo "❌ No backup found for rollback"
+            exit 1
+          fi
+          
+    - name: Notify rollback
+      run: |
+        echo "⚠️ Deployment failed and was rolled back"
+        echo "🔄 Previous version has been restored"

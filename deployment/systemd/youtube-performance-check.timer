@@ -1,0 +1,15 @@
+[Unit]
+Description=Run YouTube Scraper Performance Check Monthly
+Documentation=https://github.com/canaanhowell/youtube-scraper-production
+Requires=youtube-performance-check.service
+
+[Timer]
+# Run on the first day of every month at 3 AM
+OnCalendar=*-*-01 03:00:00
+# Run immediately if the system was powered down during the scheduled time
+Persistent=true
+# Add random delay up to 1 hour to avoid system load spikes
+RandomizedDelaySec=3600
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,45 @@
+[Unit]
+Description=YouTube Scraper Health Monitoring Service
+Documentation=https://github.com/canaanhowell/youtube-scraper-production
+After=network.target youtube-scraper.service
+Wants=network.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/youtube_scraper
+
+# Environment
+Environment=PYTHONPATH=/opt/youtube_scraper
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/opt/youtube_scraper/.env
+
+# Enhanced monitoring with alerting
+ExecStart=/bin/bash -c 'source venv/bin/activate && python3 monitoring/alerting.py'
+ExecStartPost=/opt/youtube_scraper/deployment/scripts/health_check.sh
+
+# Process management
+TimeoutStartSec=300
+TimeoutStopSec=30
+RemainAfterExit=no
+
+# Resource limits
+LimitNOFILE=1024
+LimitNPROC=512
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/youtube_scraper/logs /opt/youtube_scraper/tmp
+ReadWritePaths=/opt/youtube_scraper/monitoring/reports
+
+# Logging
+StandardOutput=append:/opt/youtube_scraper/logs/monitoring-service.log
+StandardError=append:/opt/youtube_scraper/logs/monitoring-service-error.log
+SyslogIdentifier=youtube-monitoring
+
+[Install]
+WantedBy=multi-user.target
