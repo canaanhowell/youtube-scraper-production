@@ -35,10 +35,15 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 
 **Deployment Complete** (13:00 UTC):
 - Successfully deployed to VM via GitHub push
-- Fixed all hardcoded paths from `/opt/youtube_app` to `/opt/youtube_app`
+- Fixed all hardcoded paths from `/opt/youtube_scraper` to `/opt/youtube_app`
 - Python virtual environment configured
 - All dependencies installed
 - Credentials properly configured
+
+**Hourly Automation** (13:27 UTC):
+- Cron job configured to run hourly at :15 past the hour
+- Logs available at `/opt/youtube_app/logs/cron.log`
+- Script: `/opt/youtube_app/cron_scraper.sh`
 
 **Auto-Deployment Working**:
 - GitHub Actions workflow active
@@ -52,6 +57,7 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 - ✅ Environment variables corrected (SURFSHARK_PRIVATE_KEY, SURFSHARK_ADDRESS)
 - ✅ Firebase credentials deployed
 - ✅ Logs directory created
+- ✅ Hourly automation via cron job
 
 ## Key Features
 
@@ -109,11 +115,14 @@ vim .env  # Add production credentials
 
 ### 📊 **Monitor System**
 ```bash
-# Check service status
-sudo systemctl status youtube-scraper
+# Check cron job status
+crontab -l
 
-# View logs
+# View collection logs
 tail -f logs/scraper.log
+
+# View cron logs
+tail -f logs/cron.log
 
 # Check deployment log
 tail -f /var/log/youtube_deploy.log
@@ -169,8 +178,14 @@ python youtube_collection_manager.py
 # Check logs
 tail -f /opt/youtube_app/logs/scraper.log
 
+# Check cron logs
+tail -f /opt/youtube_app/logs/cron.log
+
 # Test with limited keywords
 python youtube_collection_manager.py --test
+
+# View next scheduled run
+systemctl list-timers --all | grep youtube
 ```
 
 ## Summary
@@ -181,5 +196,6 @@ The YouTube app is now:
 - ✅ All paths migrated to `/opt/youtube_app`
 - ✅ Environment variables properly configured
 - ✅ Ready for production data collection
+- ✅ Running hourly via cron job at :15 past each hour
 
 Any push to GitHub main branch automatically deploys to production!

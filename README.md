@@ -5,22 +5,22 @@ Enterprise-ready YouTube scraper with automated deployment, VPN rotation, and co
 
 ## Recent Updates (2025-08-03)
 
-### 🔄 Project Renamed
-- Changed from `youtube_scraper` to `youtube_app`
-- Updated all paths to use new name
-- Dynamic path detection for local vs VM environments
+### 🔄 Project Migration Complete
+- Successfully migrated from `youtube_scraper` to `youtube_app`
+- All paths updated across codebase (42 files modified)
+- VM deployment verified and operational
 
-### 🚀 Smart Auto-Deployment
-- Push to GitHub = automatic deployment to VM
-- Intelligent file change detection
-- Service auto-discovery and configuration
-- Automatic backup and rollback on failure
+### 🚀 Production Features
+- **Auto-Deployment**: Push to GitHub = automatic VM deployment
+- **Hourly Collection**: Cron job runs at :15 past each hour
+- **Smart VPN Rotation**: 24 US Surfshark servers with health tracking
+- **Firebase Integration**: Real-time data storage and analytics
 
-### 🔧 Key Improvements
-- Firebase credentials via file path in `.env`
-- Dynamic logging paths (local: `./logs`, VM: `/opt/youtube_app/logs`)
-- Simplified deployment process
-- Better error handling
+### 🔧 Latest Improvements
+- Fixed all path inconsistencies
+- Configured hourly automation via cron
+- Enhanced error handling and logging
+- Improved VPN server selection algorithm
 
 ## Quick Start
 
@@ -141,14 +141,21 @@ sudo systemctl restart youtube-scraper
 
 ### Check Status
 ```bash
-sudo systemctl status youtube-scraper
+# View cron schedule
+crontab -l
+
+# Check recent logs
 tail -f logs/scraper.log
+tail -f logs/cron.log
+
+# View collection metrics
+python3 src/scripts/utilities/get_firebase_stats.py
 ```
 
 ### View Metrics
 ```bash
 # Check collection logs in Firebase
-python3 src/scripts/utilities/check_collection.py
+python3 src/scripts/validators/check_collection.py
 
 # Monitor VPN IP diversity
 python3 src/scripts/utilities/monitor_vpn_ips.py

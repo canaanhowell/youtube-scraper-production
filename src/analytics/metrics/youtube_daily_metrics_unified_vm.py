@@ -13,7 +13,8 @@ import pytz
 from typing import Dict, Any, Optional
 
 # Add project path
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, project_root)
 
 # Import Firebase client
 from src.utils.firebase_client import FirebaseClient
