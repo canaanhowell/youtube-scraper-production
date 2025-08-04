@@ -656,6 +656,22 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
   - `firestore_mapping.md` - Updated to reflect v2.0 schema
 - **Impact**: Production database now fully aligned with v2.0 standardized metrics
 
+### Platform Baseline System Simplified
+- **Status**: ✅ Completed and Active in Production
+- **Major Simplification**: Removed complex calculation system in favor of hardcoded approach
+- **Components Changed**:
+  - Removed `calculate_platform_baseline.py` (complex calculation script)
+  - Added `set_platform_baseline.py` (simple hardcoded baseline setter)
+  - Hardcoded YouTube baseline to 150.0 videos/day
+  - Updated all documentation to reflect manual management approach
+  - Simplified platform_metrics document structure
+- **Files Modified**:
+  - Deleted `calculate_platform_baseline.py`
+  - Added `set_platform_baseline.py`
+  - Updated all documentation files
+  - Simplified `platform_metrics/youtube` document
+- **Impact**: Much simpler baseline management with direct control over platform baselines
+
 ### Standardized Metrics v2.0 System Implementation
 - **Status**: ✅ Completed and Active in Production
 - **Major Enhancement**: Complete metrics standardization system
@@ -664,11 +680,11 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
   - Keyword-relative acceleration (vs own history)
   - Momentum score (0-100) with trend analysis
   - Unified trend score v2 (combined ranking)
-  - Platform baseline calculator and storage
+  - Hardcoded platform baseline storage
   - Cross-platform comparison capability
 - **Files Modified**:
   - `youtube_daily_metrics_unified_vm.py` - Core metrics calculation
-  - `calculate_platform_baseline.py` - Enhanced platform baseline
+  - `set_platform_baseline.py` - Simple baseline management
   - `firestore_mapping.md` - Schema updated to v2.0
   - Added `platform_metrics` collection
 - **Impact**: Revolutionary improvement in trend analysis and cross-platform comparison
@@ -757,4 +773,4 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ---
 
 *Last Updated: 2025-08-04*
-*Document Version: 2.1 - Added Standardized Metrics v2.0 System*
+*Document Version: 2.2 - Simplified Platform Baseline System*

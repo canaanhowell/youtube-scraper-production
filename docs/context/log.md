@@ -34,7 +34,16 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 
 ### 🔧 **Latest Updates (2025-08-04)**:
 
-**🎯 Firebase Schema v2.0 Migration** (Latest):
+**🎯 Platform Baseline System Simplified** (Latest):
+- ✅ Removed complex platform baseline calculation script
+- ✅ Implemented hardcoded platform baseline approach for simplicity
+- ✅ Created set_platform_baseline.py for manual baseline management
+- ✅ Set YouTube platform baseline to 150.0 videos/day (hardcoded)
+- ✅ Updated all documentation to reflect hardcoded approach
+- ✅ Verified velocity calculations working correctly with hardcoded baseline
+- ✅ System deployed and operational on production VM
+
+**🎯 Firebase Schema v2.0 Migration**:
 - ✅ Successfully migrated Firebase schema to v2.0 standardized metrics
 - ✅ Converted daily_metrics from subcollection to map field for all 15 keywords
 - ✅ Updated 566 category snapshot documents with new field names
@@ -297,11 +306,11 @@ python src/scripts/youtube_collection_manager.py --test
 # View next scheduled run
 systemctl list-timers --all | grep youtube
 
-# Check platform baseline
-python src/analytics/metrics/calculate_platform_baseline.py --show-current
+# Set platform baseline (manual management)
+python src/analytics/metrics/set_platform_baseline.py --baseline 150.0
 
-# Calculate new platform baseline (dry run)
-python src/analytics/metrics/calculate_platform_baseline.py --dry-run
+# View current platform baseline
+python -c "from src.utils.firebase_client import FirebaseClient; fb = FirebaseClient(); doc = fb.db.collection('platform_metrics').document('youtube').get(); print(f'Current baseline: {doc.to_dict().get(\"daily_baseline\", \"NOT FOUND\")}' if doc.exists else 'No baseline found')"
 
 # Test new standardized metrics
 python test_new_metrics.py
@@ -325,7 +334,7 @@ The YouTube app is now:
 ### Active Services:
 - **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
 - **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
-- **Platform Baseline Calculator**: Daily at 2:00 AM (before daily metrics) - `src/analytics/metrics/calculate_platform_baseline.py`
+- **Platform Baseline**: Hardcoded at 150.0 videos/day (managed via `src/analytics/metrics/set_platform_baseline.py`)
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
 Any push to GitHub main branch automatically deploys to production!

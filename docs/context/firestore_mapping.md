@@ -384,6 +384,6 @@ trend_score_v2 = (0.6 * velocity_score) + (0.4 * momentum_score)
 
 ---
 
-*Document Version: 2.0 - Added Standardized Metrics v2.0*
+*Document Version: 2.1 - Simplified Platform Baseline System*
 *Last Updated: 2025-08-04*
 *Created for: YouTube App Firestore Schema Documentation*

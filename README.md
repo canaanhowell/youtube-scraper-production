@@ -3,29 +3,30 @@
 ## Overview
 Enterprise-ready YouTube scraper with automated deployment, VPN rotation, and comprehensive analytics.
 
-## Recent Updates (2025-08-03)
+## Recent Updates (2025-08-04)
 
-### 🔄 Project Migration Complete
-- Successfully migrated from `youtube_scraper` to `youtube_app`
-- All paths updated across codebase (42 files modified)
-- VM deployment verified and operational
+### 🔄 Production System Active
+- Successfully deployed with standardized v2.0 metrics system
+- Platform baseline simplified to hardcoded approach (150 videos/day)
+- All analytics pipelines operational on production VM
+- Auto-deployment fully configured and tested
 
 ### 🚀 Production Features
 - **Auto-Deployment**: Push to GitHub = automatic VM deployment
 - **Hourly Collection**: Cron job runs at :15 past each hour
 - **Smart VPN Rotation**: 24 US Surfshark servers with health tracking
 - **Firebase Integration**: Real-time data storage and analytics
+- **Standardized Metrics v2.0**: Platform-normalized velocity scoring
 - **Title Filtering**: Strict keyword matching for improved data quality
 
-### 🔧 Latest Improvements (Today)
-- **NEW**: Added `YOUTUBE_STRICT_TITLE_FILTER` feature for better data quality
-- **Enhanced Deployment**: Simplified 3-phase deployment process
-- **Artifact-Based**: No Git operations on production VM for cleaner deployments
-- **Zero-Downtime**: Graceful service restarts with automated health checks
-- Fixed all path inconsistencies
-- Configured hourly automation via cron
-- Enhanced error handling and logging
-- Improved VPN server selection algorithm
+### 🔧 Latest Improvements (2025-08-04)
+- **NEW**: Simplified platform baseline system (hardcoded approach)
+- **Enhanced Metrics**: Platform-normalized velocity scoring operational
+- **Streamlined Management**: Manual baseline control via simple script
+- **Production Ready**: All systems deployed and verified on VM
+- **Documentation Updated**: All docs reflect current system architecture
+- Zero-downtime deployment verified
+- Enhanced analytics pipeline with v2.0 standardized metrics
 
 ## Quick Start
 

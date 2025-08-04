@@ -6,6 +6,8 @@ import time
 import re
 import logging
 import subprocess
+import asyncio
+import random
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
@@ -35,6 +37,14 @@ except ImportError:
     logger = logging.getLogger(__name__)
     network_logger = logging.getLogger('network')
 
+# Playwright imports for pagination
+try:
+    from playwright.async_api import async_playwright, Page, BrowserContext
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    logger.warning("Playwright not available - pagination disabled")
+
 class YouTubeScraperProduction:
     def __init__(self):
         # Load environment
@@ -50,26 +60,36 @@ class YouTubeScraperProduction:
         # Title filtering configuration
         self.strict_title_filter = os.getenv('YOUTUBE_STRICT_TITLE_FILTER', 'true').lower() == 'true'
         
-        logger.info(f"Production YouTube scraper initialized (strict_title_filter={self.strict_title_filter})")
+        # Pagination configuration
+        self.enable_pagination = os.getenv('YOUTUBE_ENABLE_PAGINATION', 'false').lower() == 'true'
+        self.max_scroll_attempts = int(os.getenv('YOUTUBE_MAX_SCROLL_ATTEMPTS', '10'))
+        
+        logger.info(f"Production YouTube scraper initialized (strict_title_filter={self.strict_title_filter}, pagination={self.enable_pagination})")
     
     def scrape_keyword(self, keyword: str, max_videos: int = 1000) -> Dict:
         """Scrape YouTube for a keyword and save to Firebase"""
         try:
-            logger.info(f"Starting scrape for keyword: {keyword}")
+            logger.info(f"Starting scrape for keyword: {keyword} (pagination={'enabled' if self.enable_pagination else 'disabled'})")
             start_time = datetime.utcnow()
             
             # Build YouTube search URL with 24-hour filter
             search_url = f'https://www.youtube.com/results?search_query={keyword.replace(" ", "+")}&sp=EgIIAQ%253D%253D'
             logger.info(f"Search URL: {search_url}")
             
-            # Get page content through VPN container
-            html_content = self._fetch_youtube_page(search_url)
-            if not html_content:
-                logger.error(f"Failed to fetch content for {keyword}")
-                return {'keyword': keyword, 'videos': [], 'error': 'Failed to fetch content'}
+            # Choose scraping method based on pagination setting
+            if self.enable_pagination and PLAYWRIGHT_AVAILABLE:
+                # Use Playwright with pagination
+                videos, filtered_count = asyncio.run(self._scrape_with_pagination(search_url, keyword, max_videos))
+            else:
+                # Use traditional wget method (single page)
+                html_content = self._fetch_youtube_page(search_url)
+                if not html_content:
+                    logger.error(f"Failed to fetch content for {keyword}")
+                    return {'keyword': keyword, 'videos': [], 'error': 'Failed to fetch content'}
+                
+                # Extract videos from HTML using ytInitialData
+                videos, filtered_count = self._extract_videos_from_initial_data(html_content, keyword)
             
-            # Extract videos from HTML using ytInitialData
-            videos, filtered_count = self._extract_videos_from_initial_data(html_content, keyword)
             logger.info(f"Extracted {len(videos)} videos matching keyword (filtered out {filtered_count} videos)")
             
             # Filter duplicates using Redis
@@ -343,3 +363,232 @@ class YouTubeScraperProduction:
         except Exception as e:
             logger.error(f"Error saving to Firebase: {e}")
             return False
+
+    async def _scrape_with_pagination(self, search_url: str, keyword: str, max_videos: int) -> tuple[List[Dict], int]:
+        """Scrape YouTube with pagination using Playwright through VPN container"""
+        videos = []
+        filtered_count = 0
+        
+        try:
+            # Use docker exec to run Playwright inside the VPN container
+            playwright_script = self._generate_playwright_script(search_url, keyword, max_videos)
+            
+            # Write the script to a temporary file
+            script_path = "/tmp/youtube_pagination_script.py"
+            with open(script_path, 'w') as f:
+                f.write(playwright_script)
+            
+            # Copy script to container and execute
+            subprocess.run([
+                'docker', 'cp', script_path, f'{self.container_name}:/tmp/youtube_pagination_script.py'
+            ], check=True)
+            
+            # Execute the Playwright script inside the VPN container
+            result = subprocess.run([
+                'docker', 'exec', self.container_name,
+                'python3', '/tmp/youtube_pagination_script.py'
+            ], capture_output=True, text=True, timeout=300)
+            
+            if result.returncode == 0 and result.stdout:
+                # Parse the JSON result
+                try:
+                    data = json.loads(result.stdout)
+                    videos = data.get('videos', [])
+                    filtered_count = data.get('filtered_count', 0)
+                    logger.info(f"Pagination scraping successful: {len(videos)} videos, {filtered_count} filtered")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse Playwright output: {e}")
+                    return [], 0
+            else:
+                logger.error(f"Playwright scraping failed: {result.stderr}")
+                return [], 0
+                
+        except Exception as e:
+            logger.error(f"Error in pagination scraping: {e}")
+            return [], 0
+        
+        return videos, filtered_count
+    
+    def _generate_playwright_script(self, search_url: str, keyword: str, max_videos: int) -> str:
+        """Generate a Playwright script for pagination scraping"""
+        return f'''#!/usr/bin/env python3
+import asyncio
+import json
+import re
+import random
+from playwright.async_api import async_playwright
+
+async def scrape_with_pagination():
+    videos = []
+    filtered_count = 0
+    
+    async with async_playwright() as p:
+        # Launch browser with anti-detection
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                '--no-sandbox',
+                '--disable-blink-features=AutomationControlled',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            ]
+        )
+        
+        try:
+            page = await browser.new_page()
+            
+            # Set viewport and extra headers
+            await page.set_viewport_size({{"width": 1920, "height": 1080}})
+            await page.set_extra_http_headers({{
+                'Accept-Language': 'en-US,en;q=0.9'
+            }})
+            
+            # Navigate to search URL
+            await page.goto("{search_url}", wait_until="networkidle", timeout=60000)
+            await asyncio.sleep(random.uniform(2, 4))
+            
+            # Handle cookie consent if present
+            try:
+                cookie_button = await page.wait_for_selector(
+                    'button[aria-label*="Accept"], button[aria-label*="cookies"], tp-yt-paper-button:has-text("Accept")',
+                    timeout=5000
+                )
+                if cookie_button:
+                    await cookie_button.click()
+                    await asyncio.sleep(2)
+            except:
+                pass
+            
+            scroll_attempts = 0
+            max_scrolls = {self.max_scroll_attempts}
+            last_video_count = 0
+            no_new_videos_count = 0
+            
+            while len(videos) < {max_videos} and scroll_attempts < max_scrolls:
+                # Extract videos from current view
+                current_videos = await extract_videos_from_page(page, "{keyword}")
+                
+                # Process new videos
+                new_videos = []
+                for video in current_videos:
+                    # Check if we already have this video
+                    if not any(v['id'] == video['id'] for v in videos):
+                        if video.get('filtered'):
+                            filtered_count += 1
+                        else:
+                            new_videos.append(video)
+                
+                videos.extend(new_videos)
+                
+                # Check if we found new videos
+                if len(videos) == last_video_count:
+                    no_new_videos_count += 1
+                    if no_new_videos_count >= 3:  # Stop if no new videos for 3 scrolls
+                        break
+                else:
+                    no_new_videos_count = 0
+                    last_video_count = len(videos)
+                
+                # Check if we have enough
+                if len(videos) >= {max_videos}:
+                    break
+                
+                # Scroll for more results
+                await page.evaluate("""() => {{
+                    window.scrollBy(0, window.innerHeight * 0.8);
+                }}""")
+                
+                # Human-like delay
+                await asyncio.sleep(random.uniform(1.5, 3.0))
+                scroll_attempts += 1
+            
+        finally:
+            await browser.close()
+    
+    # Return results as JSON
+    result = {{
+        'videos': videos[:{max_videos}],
+        'filtered_count': filtered_count
+    }}
+    print(json.dumps(result))
+
+async def extract_videos_from_page(page, keyword):
+    """Extract video data from current page view"""
+    videos = []
+    strict_filter = {str(self.strict_title_filter).lower()}
+    
+    try:
+        # Get all video elements
+        video_elements = await page.query_selector_all('div[class*="ytd-video-renderer"]')
+        
+        for element in video_elements:
+            try:
+                # Extract video ID from link
+                link_element = await element.query_selector('a#video-title')
+                if not link_element:
+                    continue
+                    
+                href = await link_element.get_attribute('href')
+                if not href or '/watch?v=' not in href:
+                    continue
+                    
+                video_id = href.split('/watch?v=')[1].split('&')[0]
+                
+                # Extract title
+                title = await link_element.get_attribute('title')
+                if not title:
+                    title = await link_element.inner_text()
+                
+                # Check title filtering
+                if strict_filter == 'true':
+                    if keyword.lower() not in title.lower():
+                        videos.append({{'id': video_id, 'filtered': True}})
+                        continue
+                
+                # Extract other data
+                duration_element = await element.query_selector('span.ytd-thumbnail-overlay-time-status-renderer')
+                duration = await duration_element.inner_text() if duration_element else ''
+                
+                view_count_element = await element.query_selector('span.inline-metadata-item')
+                view_count = await view_count_element.inner_text() if view_count_element else ''
+                
+                # Extract channel info
+                channel_element = await element.query_selector('a.yt-simple-endpoint.style-scope.yt-formatted-string')
+                channel_name = await channel_element.inner_text() if channel_element else ''
+                
+                # Extract publish time
+                publish_element = await element.query_selector('span.inline-metadata-item:nth-child(2)')
+                published_time = await publish_element.inner_text() if publish_element else ''
+                
+                # Extract thumbnail
+                thumbnail_element = await element.query_selector('img')
+                thumbnail_url = await thumbnail_element.get_attribute('src') if thumbnail_element else ''
+                
+                video_data = {{
+                    'id': video_id,
+                    'title': title,
+                    'url': f'https://www.youtube.com/watch?v={{video_id}}',
+                    'thumbnail_url': thumbnail_url,
+                    'duration': duration,
+                    'view_count': view_count,
+                    'published_time': published_time,
+                    'channel_name': channel_name,
+                    'keyword': keyword,
+                    'collected_at': '{{__import__("datetime").datetime.utcnow().isoformat()}}',
+                    'source': 'youtube_scraper_production_paginated'
+                }}
+                
+                videos.append(video_data)
+                
+            except Exception as e:
+                continue
+                
+    except Exception as e:
+        pass
+    
+    return videos
+
+if __name__ == "__main__":
+    asyncio.run(scrape_with_pagination())
+'''
