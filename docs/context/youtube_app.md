@@ -37,9 +37,14 @@ The YouTube App is a production-ready data collection and analytics system that 
 
 ```
 youtube_app/
-├── youtube_collection_manager.py      # Main orchestrator
-├── youtube_scraper_production.py      # Core scraping logic
 ├── src/
+│   ├── scripts/
+│   │   ├── youtube_collection_manager.py      # Main orchestrator
+│   │   ├── youtube_scraper_production.py      # Core scraping logic
+│   │   └── collectors/               # Data collection scripts
+│   │       ├── run_analytics.py
+│   │       ├── run_full_pipeline.py
+│   │       └── run_scraper.py
 │   ├── analytics/                    # Analytics pipeline
 │   │   ├── metrics/                  # Metric calculators
 │   │   │   ├── youtube_keywords_interval_metrics.py
@@ -52,11 +57,7 @@ youtube_app/
 │   │       ├── youtube_categories.py
 │   │       ├── youtube_category_daily_snapshots.py
 │   │       └── youtube_keyword_metrics.py
-│   ├── scripts/                      # Executable scripts
-│   │   ├── collectors/               # Data collection scripts
-│   │   │   ├── run_analytics.py
-│   │   │   ├── run_full_pipeline.py
-│   │   │   └── run_scraper.py
+│   ├── scripts/                      # Additional scripts
 │   │   ├── utilities/                # Utility scripts
 │   │   │   ├── extract_youtube_data.py
 │   │   │   ├── get_firebase_stats.py
@@ -266,7 +267,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 
 **Purpose**: Calculates hourly metrics for trending analysis
 
-**Schedule**: Every 2 hours via systemd timer
+**Schedule**: Immediately after each hourly scraper run (via cron_scraper_with_metrics.sh)
 
 **Firebase Collections Used**:
 
@@ -274,7 +275,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 - Queries: All videos for each keyword
 - Aggregates: Count, views, new videos
 
-#### WRITES to youtube_keywords_interval_metrics
+#### WRITES to youtube_keywords/{keyword}/interval_metrics
 - Creates metric documents with fields:
   - `keyword` (string): The keyword
   - `timestamp` (timestamp): Calculation time
@@ -302,7 +303,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 
 **Firebase Collections Used**:
 
-#### READS from youtube_keywords_interval_metrics
+#### READS from youtube_keywords/{keyword}/interval_metrics
 - Queries: Previous day's interval metrics
 - Aggregates: Daily totals and averages
 
@@ -374,7 +375,7 @@ include_video = keyword.lower() in video_title.lower()
 is_duplicate = redis_client.exists(f"youtube:video:{video_id}")
 ```
 
-### 2. Interval Metrics (Every 2 hours)
+### 2. Interval Metrics (Hourly, after scraper)
 **Script**: `youtube_keywords_interval_metrics.py`
 
 #### Data Flow:
@@ -383,7 +384,7 @@ youtube_videos/{keyword}/videos/* ← READS VIDEO DATA
     ↓
 [Calculates metrics for each keyword]
     ↓
-youtube_keywords_interval_metrics/{metric_id} ← CREATES METRIC DOC
+youtube_keywords/{keyword}/interval_metrics/{metric_id} ← CREATES METRIC DOC
     │
     └─ Calculates:
         - Velocity (videos/hour)
@@ -415,7 +416,7 @@ rolling_velocity_7d = AVG(velocities from last 7 days)
 
 #### Data Flow:
 ```
-youtube_keywords_interval_metrics/* ← READS INTERVAL METRICS
+youtube_keywords/{keyword}/interval_metrics/* ← READS INTERVAL METRICS
     ↓
 [Aggregates by day for previous day]
     ↓
@@ -456,9 +457,9 @@ Collection Manager (hourly)
     ↓
 youtube_videos collection (raw video data)
     ↓
-Interval Metrics Calculator (every 2 hours)
+Interval Metrics Calculator (hourly, after collection)
     ↓
-youtube_keywords_interval_metrics
+youtube_keywords/{keyword}/interval_metrics
     ↓
 Daily Metrics Calculator (2 AM daily)
     ↓
@@ -640,6 +641,38 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ## Recent Changes (August 4, 2025)
 
+### Firebase Schema v2.0 Migration - COMPLETED
+- **Status**: ✅ Completed and Deployed to Production
+- **Major Achievement**: Complete Firebase schema migration to v2.0 standardized metrics
+- **Migration Results**:
+  - ✅ 15 keywords migrated: daily_metrics subcollection → map field
+  - ✅ 566 category snapshot documents updated with new field names
+  - ✅ Field transformations: videos_found_in_day → new_videos_in_day, views_count → total_views
+  - ✅ Legacy fields removed, document structure cleaned
+  - ✅ All production systems updated to v2.0 schema
+- **Files Modified**:
+  - `migrate_firebase_schema_v2.py` - Created comprehensive migration script
+  - `youtube_daily_metrics_unified_vm.py` - Updated to write new schema format
+  - `firestore_mapping.md` - Updated to reflect v2.0 schema
+- **Impact**: Production database now fully aligned with v2.0 standardized metrics
+
+### Standardized Metrics v2.0 System Implementation
+- **Status**: ✅ Completed and Active in Production
+- **Major Enhancement**: Complete metrics standardization system
+- **Components Added**:
+  - Platform-normalized velocity scoring (% of baseline)
+  - Keyword-relative acceleration (vs own history)
+  - Momentum score (0-100) with trend analysis
+  - Unified trend score v2 (combined ranking)
+  - Platform baseline calculator and storage
+  - Cross-platform comparison capability
+- **Files Modified**:
+  - `youtube_daily_metrics_unified_vm.py` - Core metrics calculation
+  - `calculate_platform_baseline.py` - Enhanced platform baseline
+  - `firestore_mapping.md` - Schema updated to v2.0
+  - Added `platform_metrics` collection
+- **Impact**: Revolutionary improvement in trend analysis and cross-platform comparison
+
 ### Interval Metrics Timing Fixed
 - **Status**: ✅ Completed
 - **Issues Resolved**:
@@ -660,9 +693,9 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ### Documentation Updates
 - **Status**: ✅ Completed
 - **Changes**:
-  - Updated log.md with current status
+  - Updated log.md with current status and v2.0 metrics
   - Added detailed formulas and data flows
-  - Created firestore_mapping.md
+  - Enhanced firestore_mapping.md with v2.0 schema
   - Synced with master_docs
 - **Result**: Complete documentation coverage
 
@@ -674,8 +707,8 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 2. **VPN Rotation**: 24 US servers with smart selection
    - **Why**: Reliability and anonymity
 
-3. **Interval Metrics**: Every 2 hours instead of continuous
-   - **Why**: Balance between freshness and resource usage
+3. **Interval Metrics**: Hourly (after each collection) instead of continuous
+   - **Why**: Provides fresh data while avoiding excessive calculations
 
 4. **Category Aggregation**: Multiple time windows
    - **Why**: Different insights for different time scales
@@ -693,7 +726,7 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ### Firebase Collections
 - `keywords`: Source keywords with categories
 - `youtube_videos/{keyword}/videos`: Raw video data
-- `youtube_keywords_interval_metrics`: Hourly metrics
+- `youtube_keywords/{keyword}/interval_metrics`: Hourly metrics (subcollection)
 - `youtube_keywords`: Configuration and daily metrics
 - `youtube_categories`: Category-level aggregations
 - `youtube_collection_logs`: Audit trail
@@ -724,4 +757,4 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ---
 
 *Last Updated: 2025-08-04*
-*Document Version: 2.0 - Complete reformat to match ph_app.md structure*
+*Document Version: 2.1 - Added Standardized Metrics v2.0 System*

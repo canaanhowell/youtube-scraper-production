@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 """
-YouTube Category Metrics Aggregator
-Aggregates YouTube video metrics by category with time-windowed views
+YouTube Category Metrics Aggregator - DEPRECATED
+
+⚠️  DEPRECATED: This script is deprecated and should not be used in production.
+It creates incorrect subcollections under youtube_categories:
+- daily_metrics (should be daily_snapshots_90d)  
+- time_windows (deprecated aggregation method)
+
+Use youtube_daily_metrics_unified_vm.py instead, which creates the correct:
+- daily_snapshots_7d
+- daily_snapshots_30d  
+- daily_snapshots_90d
+
+This file is kept for reference only.
 """
 import os
 import sys
@@ -355,6 +366,16 @@ class YouTubeCategoryMetricsAggregator:
         logger.info("\nAggregation complete!")
 
 
+def main():
+    """Deprecated main function - exits with error"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.error("❌ category_metrics_aggregator.py is DEPRECATED")
+    logger.error("Use youtube_daily_metrics_unified_vm.py instead")
+    logger.error("This script creates incorrect Firebase subcollections")
+    print("❌ ERROR: This script is deprecated. Use youtube_daily_metrics_unified_vm.py instead.")
+    sys.exit(1)
+
 if __name__ == "__main__":
-    aggregator = YouTubeCategoryMetricsAggregator()
-    aggregator.run_aggregation()
+    main()

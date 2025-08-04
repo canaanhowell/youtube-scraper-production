@@ -2,7 +2,7 @@
 
 **Core principles for building production-ready, maintainable code that works with AI coding agents.**
 
-Last Updated: 2025-08-03 (Analytics integration completed)
+Last Updated: 2025-08-02
 
 ---
 
@@ -64,13 +64,12 @@ Use 5-Why analysis for every issue:
 
 ## 🏗️ PROJECT STRUCTURE (Required)
 
+### ⚠️ CRITICAL: NO FILES IN ROOT DIRECTORY
+**NOTHING should be saved in the project root. ALL files must be organized in appropriate subdirectories.**
+
 ```
 project_name/
 ├── src/
-│   ├── analytics/     # Analytics pipeline (YouTube project)
-│   │   ├── metrics/        # Metrics calculation modules
-│   │   ├── aggregators/    # Data aggregation modules  
-│   │   └── visualizers/    # Data visualization tools
 │   ├── api/           # API clients and integrations
 │   │   ├── __init__.py
 │   │   ├── base_client.py
@@ -85,16 +84,37 @@ project_name/
 │   │   ├── __init__.py
 │   │   ├── logger.py
 │   │   └── config.py
-│   ├── config/        # Configuration files
 │   └── scripts/       # Executable scripts
+├── database_management/  # Database utilities and management scripts
+│   ├── check_*.py
+│   └── view_*.py
+├── deployment/        # Deployment configurations and scripts
+│   ├── *.sh
+│   └── *.py
+├── docs/              # Documentation
+│   ├── context/
+│   └── deployment/
 ├── logs/              # Application logs
 │   ├── app.log
 │   ├── error.log
 │   └── network.log
 ├── tests/             # Test files
 ├── config/            # Configuration files
-└── requirements.txt
+├── .github/           # GitHub Actions workflows
+│   └── workflows/
+├── .env               # Environment variables (gitignored)
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
+
+### File Organization Rules:
+1. **Root Directory**: Only configuration files (.env, .gitignore, requirements.txt, README.md)
+2. **Source Code**: ALL Python scripts go in `src/` subdirectories
+3. **Scripts**: Executable scripts in `src/scripts/`, NOT in root
+4. **Database Tools**: Management scripts in `database_management/`
+5. **Deployment**: All deployment scripts in `deployment/`
+6. **Documentation**: All docs in `docs/` with appropriate subdirectories
 
 ---
 

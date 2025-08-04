@@ -34,6 +34,43 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 
 ### 🔧 **Latest Updates (2025-08-04)**:
 
+**🎯 Firebase Schema v2.0 Migration** (Latest):
+- ✅ Successfully migrated Firebase schema to v2.0 standardized metrics
+- ✅ Converted daily_metrics from subcollection to map field for all 15 keywords
+- ✅ Updated 566 category snapshot documents with new field names
+- ✅ Transformed field names: videos_found_in_day → new_videos_in_day, views_count → total_views
+- ✅ Added standardized v2.0 fields: velocity (platform-normalized %), acceleration (keyword-relative ratio)
+- ✅ Removed legacy metrics and cleaned up keyword document structure
+- ✅ Updated youtube_daily_metrics_unified_vm.py to write new schema format
+- ✅ Added current_velocity field updates to keywords for real-time tracking
+- ✅ All production systems now using v2.0 schema with backward compatibility removed
+
+**🎯 Standardized Metrics v2.0 Implementation**:
+- ✅ Implemented platform-normalized velocity scoring system
+- ✅ Added keyword-relative acceleration calculations
+- ✅ Created momentum score (0-100) based on trend analysis
+- ✅ Built unified trend score v2 combining velocity + momentum
+- ✅ Enhanced youtube_daily_metrics_unified_vm.py with new scoring
+- ✅ Updated category snapshots with standardized metrics
+- ✅ Created platform baseline calculator for YouTube
+- ✅ Added platform_metrics collection for baseline storage
+- ✅ Updated firestore_mapping.md with v2.0 schema
+- ✅ Comprehensive testing validated all calculations
+- ✅ Cross-platform comparison now possible with normalized scores
+
+**Key Benefits of New Metrics System**:
+- 🔥 **Platform-Normalized Velocity**: 150% = 150% of YouTube platform average
+- 🚀 **Keyword-Relative Acceleration**: 1.5x = 150% vs keyword's own baseline
+- 📈 **Momentum Score**: 0-100 trend momentum using linear regression
+- 🎯 **Unified Trend Score**: Combined ranking score (60% velocity + 40% momentum)
+- 🌐 **Cross-Platform**: Standardized scoring enables comparison across platforms
+
+**Scheduled Function Paths Fixed**:
+- ✅ Fixed cron_scraper_with_metrics.sh to use correct script paths
+- ✅ Updated from module import to direct script execution
+- ✅ All scheduled functions now pointing to reorganized project structure
+- ✅ Verified scripts are executable and working
+
 **Interval Metrics Timing Fixed**:
 - ✅ Fixed interval metrics running every 5 minutes instead of hourly
 - ✅ Disabled systemd analytics timer that was causing excessive runs
@@ -109,14 +146,20 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 ### 📁 **Project Structure**
 ```
 youtube_app/
-├── youtube_collection_manager.py      # Main orchestrator
-├── youtube_scraper_production.py      # Core scraping logic
 ├── src/
-│   ├── utils/                        # Utilities
-│   │   ├── env_loader.py            # Fixed for youtube_app paths
-│   │   ├── logging_config_enhanced.py # Dynamic log paths
+│   ├── scripts/
+│   │   ├── youtube_collection_manager.py  # Main orchestrator
+│   │   ├── youtube_scraper_production.py  # Core scraping logic
+│   │   └── collectors/
+│   │       └── run_analytics.py           # Analytics runner
+│   ├── utils/                             # Utilities
+│   │   ├── env_loader.py                  # Fixed for youtube_app paths
+│   │   ├── logging_config_enhanced.py     # Dynamic log paths
 │   │   └── firebase_client_enhanced.py
-│   └── analytics/                    # Analytics pipeline
+│   └── analytics/                         # Analytics pipeline
+│       └── metrics/
+│           ├── youtube_keywords_interval_metrics.py
+│           └── youtube_daily_metrics_unified_vm.py
 ├── deployment/
 │   ├── scripts/
 │   │   ├── smart_deploy.sh          # Smart deployment script
@@ -240,7 +283,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 ```bash
 # Run collection manually
 cd /opt/youtube_app && source venv/bin/activate
-python youtube_collection_manager.py
+python src/scripts/youtube_collection_manager.py
 
 # Check logs
 tail -f /opt/youtube_app/logs/scraper.log
@@ -249,10 +292,19 @@ tail -f /opt/youtube_app/logs/scraper.log
 tail -f /opt/youtube_app/logs/cron.log
 
 # Test with limited keywords
-python youtube_collection_manager.py --test
+python src/scripts/youtube_collection_manager.py --test
 
 # View next scheduled run
 systemctl list-timers --all | grep youtube
+
+# Check platform baseline
+python src/analytics/metrics/calculate_platform_baseline.py --show-current
+
+# Calculate new platform baseline (dry run)
+python src/analytics/metrics/calculate_platform_baseline.py --dry-run
+
+# Test new standardized metrics
+python test_new_metrics.py
 ```
 
 ## Summary
@@ -264,13 +316,16 @@ The YouTube app is now:
 - ✅ Environment variables properly configured
 - ✅ Ready for production data collection
 - ✅ Running hourly via cron job at :15 past each hour
-- ✅ Analytics pipeline operational (interval metrics every 2 hours)
-- ✅ Daily metrics calculating at 2:00 AM daily
+- ✅ Analytics pipeline operational (interval metrics run immediately after scraper)
+- ✅ Daily metrics calculating at 2:00 AM daily with **standardized v2.0 metrics**
+- ✅ Platform baseline calculator for velocity normalization
+- ✅ Cross-platform comparable metrics system
 - ✅ All systemd services configured and active
 
 ### Active Services:
 - **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
-- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
+- **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
+- **Platform Baseline Calculator**: Daily at 2:00 AM (before daily metrics) - `src/analytics/metrics/calculate_platform_baseline.py`
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
 Any push to GitHub main branch automatically deploys to production!

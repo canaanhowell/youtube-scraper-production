@@ -178,36 +178,22 @@ class YouTubeIntervalMetricsCollector:
             'updated_at': timestamp
         }
         
-        # Calculate velocity and acceleration
+        # Store previous video count for reference
         if previous_metrics:
             prev_data = previous_metrics[0].to_dict()
+            interval_metric['previous_video_count'] = prev_data.get('video_count', 0)
             
-            # Get time difference in hours
+            # Calculate time since last collection
             prev_timestamp = prev_data.get('timestamp')
             if isinstance(prev_timestamp, str):
                 prev_timestamp = datetime.fromisoformat(prev_timestamp.replace('Z', '+00:00'))
             
             time_diff_hours = (timestamp - prev_timestamp).total_seconds() / 3600
-            
-            if time_diff_hours > 0:
-                # Velocity: videos per hour
-                velocity = videos_found_in_search / time_diff_hours
-                interval_metric['velocity'] = round(velocity, 2)
-                
-                # Acceleration: change in velocity per hour
-                prev_velocity = prev_data.get('velocity', 0)
-                acceleration = (velocity - prev_velocity) / time_diff_hours
-                interval_metric['acceleration'] = round(acceleration, 3)
-            else:
-                interval_metric['velocity'] = 0
-                interval_metric['acceleration'] = 0
-                
-            interval_metric['previous_video_count'] = prev_data.get('video_count', 0)
+            interval_metric['hours_since_last'] = round(time_diff_hours, 2)
         else:
             # First metric
-            interval_metric['velocity'] = 0
-            interval_metric['acceleration'] = 0
             interval_metric['previous_video_count'] = 0
+            interval_metric['hours_since_last'] = 0
         
         # Save interval metric
         doc_id = timestamp.strftime('%Y%m%d_%H%M%S')
@@ -222,8 +208,7 @@ class YouTubeIntervalMetricsCollector:
             'current_metrics': {
                 'video_count': video_count,
                 'views_count': total_views,
-                'velocity': interval_metric.get('velocity', 0),
-                'acceleration': interval_metric.get('acceleration', 0),
+                'videos_found_in_search': videos_found_in_search,
                 'last_updated': timestamp
             },
             'last_interval_collection': timestamp
@@ -234,8 +219,7 @@ class YouTubeIntervalMetricsCollector:
         logger.info(f"  Video count: {video_count}")
         logger.info(f"  Total views: {total_views:,}")
         logger.info(f"  New videos: {videos_found_in_search}")
-        logger.info(f"  Velocity: {interval_metric.get('velocity', 0):.2f} videos/hour")
-        logger.info(f"  Acceleration: {interval_metric.get('acceleration', 0):.3f} videos/hour²")
+        logger.info(f"  Hours since last: {interval_metric.get('hours_since_last', 0):.1f}")
         
         return interval_metric
     
@@ -285,15 +269,15 @@ class YouTubeIntervalMetricsCollector:
             metrics = list(metrics_ref.stream())
             
             if metrics:
-                # Calculate averages
-                velocities = [m.to_dict().get('velocity', 0) for m in metrics]
-                accelerations = [m.to_dict().get('acceleration', 0) for m in metrics]
+                # Calculate totals and averages for the window
+                total_videos_found = sum(m.to_dict().get('videos_found_in_search', 0) for m in metrics)
+                video_counts = [m.to_dict().get('video_count', 0) for m in metrics]
                 
                 rolling_metrics[window_name] = {
-                    'avg_velocity': sum(velocities) / len(velocities),
-                    'avg_acceleration': sum(accelerations) / len(accelerations),
-                    'max_velocity': max(velocities),
-                    'min_velocity': min(velocities),
+                    'total_videos_found': total_videos_found,
+                    'avg_video_count': sum(video_counts) / len(video_counts),
+                    'max_video_count': max(video_counts),
+                    'min_video_count': min(video_counts),
                     'sample_count': len(metrics)
                 }
         
