@@ -19,7 +19,7 @@ python3 src/scripts/youtube_collection_manager.py >> /opt/youtube_app/logs/cron.
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] YouTube scraper completed, running interval metrics" >> /opt/youtube_app/logs/cron.log
 
 # Run interval metrics calculation
-python3 -m src.scripts.collectors.run_analytics --task interval >> /opt/youtube_app/logs/cron.log 2>&1
+python3 src/scripts/collectors/run_analytics.py --task interval >> /opt/youtube_app/logs/cron.log 2>&1
 
 # Log completion
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] YouTube scraper + interval metrics cron job completed" >> /opt/youtube_app/logs/cron.log
