@@ -10,15 +10,15 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from youtube_scraper_production import YouTubeScraperProduction
+from src.scripts.youtube_scraper_production import YouTubeScraperProduction
 
 
 class TestYouTubeScraperProduction:
     """Test suite for YouTubeScraperProduction"""
     
-    @patch('youtube_scraper_production.FirebaseClient')
-    @patch('youtube_scraper_production.RedisClient')
-    @patch('youtube_scraper_production.load_env')
+    @patch('src.scripts.youtube_scraper_production.FirebaseClient')
+    @patch('src.scripts.youtube_scraper_production.RedisClient')
+    @patch('src.scripts.youtube_scraper_production.load_env')
     def test_initialization(self, mock_load_env, mock_redis, mock_firebase, mock_env):
         """Test scraper initialization"""
         scraper = YouTubeScraperProduction()
@@ -50,7 +50,7 @@ class TestYouTubeScraperProduction:
             test_url_spaces = f'https://www.youtube.com/results?search_query={keyword_with_spaces.replace(" ", "+")}&sp=EgIIAQ%253D%253D'
             assert test_url_spaces == expected_url_spaces
     
-    @patch('youtube_scraper_production.subprocess.run')
+    @patch('src.scripts.youtube_scraper_production.subprocess.run')
     def test_fetch_youtube_page_success(self, mock_subprocess, mock_env):
         """Test successful YouTube page fetching"""
         with patch('youtube_scraper_production.FirebaseClient'), \
@@ -71,7 +71,7 @@ class TestYouTubeScraperProduction:
             assert result == "<html>Mock YouTube content</html>"
             mock_subprocess.assert_called_once()
     
-    @patch('youtube_scraper_production.subprocess.run')
+    @patch('src.scripts.youtube_scraper_production.subprocess.run')
     def test_fetch_youtube_page_failure(self, mock_subprocess, mock_env):
         """Test YouTube page fetching failure"""
         with patch('youtube_scraper_production.FirebaseClient'), \
@@ -183,7 +183,7 @@ class TestYouTubeScraperProduction:
             assert result is True
             mock_firebase_instance.save_video.assert_called_with(keyword, sample_video_data)
     
-    @patch('youtube_scraper_production.datetime')
+    @patch('src.scripts.youtube_scraper_production.datetime')
     def test_scrape_keyword_integration(self, mock_datetime, sample_video_data, mock_env):
         """Test full scrape_keyword method flow"""
         # Mock datetime

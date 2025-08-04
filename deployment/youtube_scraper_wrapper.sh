@@ -51,7 +51,7 @@ fi
 
 # Run the scraper
 log "Running VPN keyword rotator"
-python3 youtube_collection_manager.py
+python3 src/scripts/youtube_collection_manager.py
 
 # Log completion
 log "Scraper run completed"

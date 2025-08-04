@@ -17,7 +17,7 @@ import json
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from youtube_scraper_production import YouTubeScraperProduction
+from src.scripts.youtube_scraper_production import YouTubeScraperProduction
 from src.utils.firebase_client_enhanced import FirebaseClient
 from src.utils.redis_client_enhanced import RedisClientEnhanced
 

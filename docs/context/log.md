@@ -17,7 +17,7 @@ You have 2 rules:
 - **VM**: SSH to VM using `/workspace/droplet1` (private key) - IP: 134.199.201.56
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
-## Current Status (2025-08-03)
+## Current Status (2025-08-04)
 
 ### 🚀 **Deployed and Running**
 
@@ -30,8 +30,45 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 - **Firebase**: Connected and operational
 - **Redis**: Upstash Redis REST API configured
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
+- **Analytics Pipeline**: Fully operational with interval and daily metrics
 
-### 🔧 **Latest Updates**:
+### 🔧 **Latest Updates (2025-08-04)**:
+
+**Interval Metrics Timing Fixed**:
+- ✅ Fixed interval metrics running every 5 minutes instead of hourly
+- ✅ Disabled systemd analytics timer that was causing excessive runs
+- ✅ Integrated interval metrics into hourly scraper cron job
+- ✅ Now runs correctly: Scraper at :15, then interval metrics immediately after
+- ✅ Proper data flow: Videos collected → Interval metrics calculated → Daily metrics aggregated
+
+**Analytics Pipeline Fixed**:
+- ✅ Fixed systemd service configuration for analytics
+- ✅ Daily metrics cron job verified (runs at 2:00 AM daily)
+- ✅ Interval metrics now calculating properly after each scraper run
+- ✅ Created fix scripts for future troubleshooting
+- ✅ All metrics services operational
+
+**Video Collection Confirmed Working**:
+- ✅ Videos ARE being collected successfully (56 videos in last run)
+- ✅ Strict title filter disabled to improve collection rates
+- ✅ Data properly stored in `youtube_videos/{keyword}/videos/`
+- ✅ Interval metrics stored in `youtube_keywords/{keyword}/interval_metrics/`
+
+### 🔧 **Previous Updates (2025-08-03)**:
+
+**Title Filtering Enhancement** (Latest):
+- ✅ Added YOUTUBE_STRICT_TITLE_FILTER feature
+- ✅ Only collects videos containing the search keyword in their title
+- ✅ Defaults to true for improved data quality
+- ✅ Environment variable: `YOUTUBE_STRICT_TITLE_FILTER=true`
+- ✅ Reduces irrelevant data collection significantly
+
+**Simplified Deployment Process**:
+- ✅ 3-phase deployment process implemented
+- ✅ No Git operations on production VM
+- ✅ Artifact-based deployment for cleaner production
+- ✅ Automated health checks and verification
+- ✅ Zero-downtime deployments
 
 **Deployment Complete** (13:00 UTC):
 - Successfully deployed to VM via GitHub push
@@ -58,6 +95,7 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 - ✅ Firebase credentials deployed
 - ✅ Logs directory created
 - ✅ Hourly automation via cron job
+- ✅ Title filtering implemented for better data quality
 
 ## Key Features
 
@@ -107,10 +145,17 @@ git push origin main
 # 2. Monitor deployment
 # Check GitHub Actions: https://github.com/canaanhowell/youtube-scraper-production/actions
 
-# 3. SSH to VM and add credentials
+# 3. SSH to VM and add credentials (first time only)
 ssh -i /workspace/droplet1 root@134.199.201.56
 cd /opt/youtube_app
 vim .env  # Add production credentials
+```
+
+### ⚙️ **Configure Title Filtering**
+```bash
+# In .env file, set title filtering (defaults to true)
+YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title
+YOUTUBE_STRICT_TITLE_FILTER=false # Collect all videos from search results
 ```
 
 ### 📊 **Monitor System**
@@ -124,12 +169,31 @@ tail -f logs/scraper.log
 # View cron logs
 tail -f logs/cron.log
 
+# View analytics logs
+tail -f logs/analytics.log
+
+# View daily metrics logs
+tail -f logs/daily_metrics.log
+
+# Check systemd timers
+systemctl list-timers --all | grep youtube
+
+# Check analytics service status
+systemctl status youtube-analytics.timer
+systemctl status youtube-analytics.service
+
 # Check deployment log
 tail -f /var/log/youtube_deploy.log
 
 # Manual backup/rollback if needed
 python3 deployment/scripts/backup_manager.py backup
 python3 deployment/scripts/backup_manager.py rollback
+
+# Run daily metrics manually if needed
+bash deployment/scripts/run_daily_metrics_now.sh
+
+# Fix daily metrics cron if needed
+bash deployment/scripts/fix_daily_metrics_cron.sh
 ```
 
 ## Important Notes
@@ -157,6 +221,9 @@ SURFSHARK_ADDRESS=10.14.0.2/16
 # Environment
 ENVIRONMENT=production
 LOG_LEVEL=INFO
+
+# YouTube Settings
+YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (default: true)
 ```
 
 ## System Architecture
@@ -197,5 +264,13 @@ The YouTube app is now:
 - ✅ Environment variables properly configured
 - ✅ Ready for production data collection
 - ✅ Running hourly via cron job at :15 past each hour
+- ✅ Analytics pipeline operational (interval metrics every 2 hours)
+- ✅ Daily metrics calculating at 2:00 AM daily
+- ✅ All systemd services configured and active
+
+### Active Services:
+- **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
+- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
+- **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
 Any push to GitHub main branch automatically deploys to production!

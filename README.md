@@ -15,13 +15,17 @@ Enterprise-ready YouTube scraper with automated deployment, VPN rotation, and co
 - **Hourly Collection**: Cron job runs at :15 past each hour
 - **Smart VPN Rotation**: 24 US Surfshark servers with health tracking
 - **Firebase Integration**: Real-time data storage and analytics
+- **Title Filtering**: Strict keyword matching for improved data quality
 
-### 🔧 Latest Improvements
+### 🔧 Latest Improvements (Today)
+- **NEW**: Added `YOUTUBE_STRICT_TITLE_FILTER` feature for better data quality
+- **Enhanced Deployment**: Simplified 3-phase deployment process
+- **Artifact-Based**: No Git operations on production VM for cleaner deployments
+- **Zero-Downtime**: Graceful service restarts with automated health checks
 - Fixed all path inconsistencies
 - Configured hourly automation via cron
 - Enhanced error handling and logging
 - Improved VPN server selection algorithm
-- **NEW**: Added strict title filtering to ensure collected videos contain the search keyword in their title
 
 ## Quick Start
 
@@ -46,13 +50,19 @@ pip install -r requirements.txt
 
 ### 3. Deploy to Production
 ```bash
-# Push to GitHub (triggers auto-deployment)
+# Push to GitHub (triggers automatic deployment)
 git push origin main
 
-# SSH to VM and add .env
+# SSH to VM and add .env (first time only)
 ssh -i /path/to/key root@134.199.201.56
 cd /opt/youtube_app
 vim .env  # Add production credentials
+
+# Deployment is now automatic and simplified:
+# ✅ No Git operations on production VM
+# ✅ Artifact-based deployment
+# ✅ Automatic health checks
+# ✅ Zero-downtime updates
 ```
 
 ## Project Structure
@@ -90,10 +100,12 @@ youtube_app/
 - Real-time metrics
 
 ### 🚀 Deployment
-- GitHub Actions CI/CD
-- Smart file change detection
-- Automatic service management
-- Backup and rollback capabilities
+- **Simplified 3-Phase Process**: Infrastructure → GitHub → Monitor
+- **Artifact-Based**: No Git operations on production VM
+- **Smart Detection**: Only updates changed components
+- **Zero-Downtime**: Graceful service restarts
+- **Auto-Rollback**: Automatic rollback on deployment failure
+- **Health Checks**: Automatic verification post-deployment
 
 ### 🔒 Security
 - Credentials in environment variables
@@ -123,21 +135,26 @@ LOG_LEVEL=INFO
 
 # YouTube Scraper Settings
 YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (default: true)
+                                  # Set to false to collect all videos from search results
 ```
 
 ## Deployment
 
 ### Automatic (Recommended)
 1. Push to `main` branch
-2. GitHub Actions deploys automatically
-3. SSH to VM and add `.env` file
+2. GitHub Actions deploys automatically via artifact-based deployment
+3. SSH to VM and add `.env` file (first time only)
 
-### Manual
+### Manual (Emergency Only)
 ```bash
+# Only use if automatic deployment fails
 ssh root@134.199.201.56
 cd /opt/youtube_app
-git pull
-pip install -r requirements.txt
+
+# Rollback using backup manager
+python3 deployment/scripts/backup_manager.py rollback
+
+# Or manual service restart
 sudo systemctl restart youtube-scraper
 ```
 
@@ -180,6 +197,11 @@ python3 src/scripts/utilities/monitor_vpn_ips.py
 3. **VPN Connection Failed**
    - VPN only works on VM with Docker
    - Cannot test VPN locally
+
+4. **Title Filtering Issues**
+   - Check `YOUTUBE_STRICT_TITLE_FILTER` setting in `.env`
+   - Set to `true` for strict keyword matching (recommended)
+   - Set to `false` to collect all search results
 
 ### Logs
 - Application: `logs/scraper.log`

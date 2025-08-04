@@ -7,7 +7,7 @@ from pathlib import Path
 # Add project to path
 sys.path.append(str(Path(__file__).parent))
 
-from youtube_scraper_production import YouTubeScraperProduction
+from src.scripts.youtube_scraper_production import YouTubeScraperProduction
 
 def main():
     parser = argparse.ArgumentParser(description='Run YouTube scraper for a keyword')

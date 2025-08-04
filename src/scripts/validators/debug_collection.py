@@ -4,7 +4,7 @@ sys.path.insert(0, '/opt/youtube_app')
 
 from src.utils.firebase_client import FirebaseClient
 from src.utils.redis_client import RedisClient
-from youtube_scraper_production import YouTubeScraperProduction
+from src.scripts.youtube_scraper_production import YouTubeScraperProduction
 import subprocess
 import time
 import json

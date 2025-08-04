@@ -1,0 +1,17 @@
+[Unit]
+Description=YouTube Analytics Processing Timer
+Documentation=https://github.com/canaanhowell/youtube-scraper-production
+Requires=youtube-analytics.service
+
+[Timer]
+# Run analytics every 2 hours
+OnCalendar=0/2:00:00
+# Run 10 minutes after system boot
+OnBootSec=10min
+# If the system was down when the timer should have run, run it on next boot
+Persistent=true
+# Remove randomized delay to run exactly every 2 hours
+RandomizedDelaySec=0
+
+[Install]
+WantedBy=timers.target

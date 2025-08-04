@@ -38,7 +38,7 @@ cd "$SCRIPT_DIR" || exit 1
 source venv/bin/activate
 
 # Run the interval metrics script
-python3 youtube_keywords_interval_metrics.py >> "$LOG_FILE" 2>&1
+python3 src/analytics/metrics/youtube_keywords_interval_metrics.py >> "$LOG_FILE" 2>&1
 
 if [ $? -eq 0 ]; then
     log "Interval metrics collection completed successfully"

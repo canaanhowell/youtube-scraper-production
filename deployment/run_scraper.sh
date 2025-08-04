@@ -3,4 +3,4 @@
 
 cd /opt/youtube_app
 source venv/bin/activate
-python youtube_collection_manager.py
+python src/scripts/youtube_collection_manager.py

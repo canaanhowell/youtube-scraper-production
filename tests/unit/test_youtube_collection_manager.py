@@ -16,10 +16,10 @@ from youtube_collection_manager import YouTubeCollectionManager
 class TestYouTubeCollectionManager:
     """Test suite for YouTubeCollectionManager"""
     
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_initialization(self, mock_load_env, mock_firebase, mock_redis, mock_scraper, mock_env):
         """Test collection manager initialization"""
         manager = YouTubeCollectionManager()
@@ -33,10 +33,10 @@ class TestYouTubeCollectionManager:
         assert manager.max_vpn_attempts_per_keyword == 3
         mock_load_env.assert_called_once()
     
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_get_surfshark_servers(self, mock_load_env, mock_firebase, mock_redis, mock_scraper, mock_env):
         """Test Surfshark server list generation"""
         manager = YouTubeCollectionManager()
@@ -59,11 +59,11 @@ class TestYouTubeCollectionManager:
         for expected in expected_servers:
             assert expected in servers
     
-    @patch('youtube_collection_manager.subprocess.run')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.subprocess.run')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_rotate_vpn_server_success(self, mock_load_env, mock_firebase, mock_redis, 
                                       mock_scraper, mock_subprocess, mock_env):
         """Test successful VPN server rotation"""
@@ -87,11 +87,11 @@ class TestYouTubeCollectionManager:
         assert calls[0][0][0] == ['docker', 'compose', 'down']
         assert calls[1][0][0] == ['docker', 'compose', 'up', '-d']
     
-    @patch('youtube_collection_manager.subprocess.run')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.subprocess.run')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_rotate_vpn_server_failure(self, mock_load_env, mock_firebase, mock_redis, 
                                       mock_scraper, mock_subprocess, mock_env):
         """Test failed VPN server rotation"""
@@ -106,12 +106,12 @@ class TestYouTubeCollectionManager:
         assert 'us-nyc.prod.surfshark.com' in manager.failed_servers
         assert 'us-nyc.prod.surfshark.com' not in manager.working_servers
     
-    @patch('youtube_collection_manager.json.loads')
-    @patch('youtube_collection_manager.subprocess.run')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.json.loads')
+    @patch('src.scripts.youtube_collection_manager.subprocess.run')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_wait_for_vpn_connection_success(self, mock_load_env, mock_firebase, mock_redis, 
                                             mock_scraper, mock_subprocess, mock_json, mock_env):
         """Test successful VPN connection wait"""
@@ -129,12 +129,12 @@ class TestYouTubeCollectionManager:
         assert result is True
         mock_subprocess.assert_called()
     
-    @patch('youtube_collection_manager.time.time')
-    @patch('youtube_collection_manager.subprocess.run')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.time.time')
+    @patch('src.scripts.youtube_collection_manager.subprocess.run')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_wait_for_vpn_connection_timeout(self, mock_load_env, mock_firebase, mock_redis, 
                                            mock_scraper, mock_subprocess, mock_time, mock_env):
         """Test VPN connection timeout"""
@@ -151,10 +151,10 @@ class TestYouTubeCollectionManager:
         
         assert result is False
     
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_get_next_available_server(self, mock_load_env, mock_firebase, mock_redis, 
                                      mock_scraper, mock_env):
         """Test server selection logic"""
@@ -185,10 +185,10 @@ class TestYouTubeCollectionManager:
         )
         assert server is None
     
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_process_keyword_with_retry_success(self, mock_load_env, mock_firebase, 
                                                mock_redis, mock_scraper, mock_env):
         """Test successful keyword processing with retry logic"""
@@ -211,11 +211,11 @@ class TestYouTubeCollectionManager:
         manager.rotate_vpn_server.assert_called_once()
         mock_scraper_instance.scrape_keyword.assert_called_once_with('python programming', max_videos=100)
     
-    @patch('youtube_collection_manager.time.sleep')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.time.sleep')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_process_keyword_with_retry_vpn_failures(self, mock_load_env, mock_firebase, 
                                                     mock_redis, mock_scraper, mock_sleep, mock_env):
         """Test keyword processing with VPN failures and retries"""
@@ -237,10 +237,10 @@ class TestYouTubeCollectionManager:
         # Check exponential backoff was applied
         mock_sleep.assert_has_calls([call(1), call(2)])
     
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_process_keyword_with_retry_all_failures(self, mock_load_env, mock_firebase, 
                                                     mock_redis, mock_scraper, mock_env):
         """Test keyword processing when all VPN attempts fail"""
@@ -255,11 +255,11 @@ class TestYouTubeCollectionManager:
         assert 'Failed to connect to any VPN server' in str(exc_info.value)
         assert manager.rotate_vpn_server.call_count == 3
     
-    @patch('youtube_collection_manager.subprocess.run')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.subprocess.run')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_run_method_success(self, mock_load_env, mock_firebase_class, mock_redis, 
                                mock_scraper, mock_subprocess, mock_env):
         """Test full run method execution"""
@@ -288,11 +288,11 @@ class TestYouTubeCollectionManager:
         # Verify Firebase logging
         mock_firebase_instance.log_collection_run.assert_called_once()
     
-    @patch('youtube_collection_manager.subprocess.run')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.subprocess.run')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_run_method_partial_failure(self, mock_load_env, mock_firebase_class, mock_redis, 
                                       mock_scraper, mock_subprocess, mock_env):
         """Test run method with some keyword failures"""
@@ -319,11 +319,11 @@ class TestYouTubeCollectionManager:
         assert manager.collection_stats['success'] is True
         assert len(manager.collection_stats['errors']) == 2
     
-    @patch('youtube_collection_manager.subprocess.run')
-    @patch('youtube_collection_manager.YouTubeScraperProduction')
-    @patch('youtube_collection_manager.RedisClient')
-    @patch('youtube_collection_manager.FirebaseClient')
-    @patch('youtube_collection_manager.load_env')
+    @patch('src.scripts.youtube_collection_manager.subprocess.run')
+    @patch('src.scripts.youtube_collection_manager.YouTubeScraperProduction')
+    @patch('src.scripts.youtube_collection_manager.RedisClient')
+    @patch('src.scripts.youtube_collection_manager.FirebaseClient')
+    @patch('src.scripts.youtube_collection_manager.load_env')
     def test_finalize_collection(self, mock_load_env, mock_firebase_class, mock_redis, 
                                 mock_scraper, mock_subprocess, mock_env):
         """Test collection finalization"""

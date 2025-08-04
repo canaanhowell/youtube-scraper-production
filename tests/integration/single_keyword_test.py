@@ -3,7 +3,7 @@
 import sys
 sys.path.insert(0, '/opt/youtube_app')
 
-from youtube_collection_manager import YouTubeCollectionManager
+from src.scripts.youtube_collection_manager import YouTubeCollectionManager
 import logging
 
 # Override to test with just one keyword
