@@ -69,7 +69,7 @@ class YouTubeCollectionManager:
         # Initialize clients
         self.firebase_client = FirebaseClient()
         self.redis_client = RedisClient()
-        self.scraper = YouTubeScraperProduction(container_name=container_name)
+        self.scraper = YouTubeScraperProduction(container_name=container_name, instance_id=instance_id)
         
         # Session tracking
         self.session_id = f"session_{int(time.time())}_{instance_id}"

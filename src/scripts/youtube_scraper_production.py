@@ -46,7 +46,7 @@ except ImportError:
     logger.warning("Playwright not available - pagination disabled")
 
 class YouTubeScraperProduction:
-    def __init__(self, container_name: str = "youtube-vpn"):
+    def __init__(self, container_name: str = "youtube-vpn", instance_id: int = 1):
         # Load environment
         load_env()
         
@@ -56,6 +56,8 @@ class YouTubeScraperProduction:
         
         # Container name for VPN
         self.container_name = container_name
+        # Instance ID for Redis key namespacing
+        self.instance_id = instance_id
         
         # Title filtering configuration
         self.strict_title_filter = os.getenv('YOUTUBE_STRICT_TITLE_FILTER', 'true').lower() == 'true'
@@ -284,7 +286,7 @@ class YouTubeScraperProduction:
             return False
         
         try:
-            key = f"video:{video_id}"
+            key = f"instance_{self.instance_id}:video:{video_id}"
             return self.redis.exists(key) > 0
         except Exception as e:
             logger.error(f"Error checking duplicate: {e}")
@@ -296,7 +298,7 @@ class YouTubeScraperProduction:
             return
         
         try:
-            key = f"video:{video_id}"
+            key = f"instance_{self.instance_id}:video:{video_id}"
             # Store for 24 hours (86400 seconds) for better deduplication across longer runs
             self.redis.setex(key, 86400, "1")
         except Exception as e:
