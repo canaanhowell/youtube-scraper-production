@@ -4,7 +4,7 @@
 # Create cron script
 cat > /opt/youtube_app/cron_scraper.sh << 'EOF'
 #!/bin/bash
-# YouTube Scraper Cron Job
+# YouTube Scraper Cron Job with Interval Metrics
 
 # Set up environment
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -20,8 +20,12 @@ cd /opt/youtube_app
 source venv/bin/activate
 python src/scripts/youtube_collection_manager.py >> /opt/youtube_app/logs/cron.log 2>&1
 
+# Run interval metrics immediately after scraper
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting interval metrics calculation" >> /opt/youtube_app/logs/cron.log
+python src/analytics/metrics/youtube_keywords_interval_metrics.py >> /opt/youtube_app/logs/cron.log 2>&1
+
 # Log completion
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] YouTube scraper cron job completed" >> /opt/youtube_app/logs/cron.log
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] YouTube scraper and interval metrics completed" >> /opt/youtube_app/logs/cron.log
 EOF
 
 # Make script executable
