@@ -181,7 +181,7 @@ youtube_app/
 
 ```
 YouTube Search (via VPN)
-    ↓ (hourly at :15)
+    ↓ (every 10 minutes)
 youtube_collection_manager.py
     ↓ (deduplication check)
 youtube_videos/{keyword}/videos collection
@@ -227,7 +227,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 
 **Purpose**: Orchestrates YouTube video collection across all keywords
 
-**Schedule**: Hourly at :15 past the hour (cron)
+**Schedule**: Every 10 minutes (cron)
 
 **Firebase Collections Used**:
 
@@ -267,7 +267,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 
 **Purpose**: Calculates hourly metrics for trending analysis
 
-**Schedule**: Immediately after each hourly scraper run (via cron_scraper_with_metrics.sh)
+**Schedule**: Immediately after each scraper run every 10 minutes (via cron_scraper_with_metrics.sh)
 
 **Firebase Collections Used**:
 
@@ -475,11 +475,11 @@ youtube_categories/* (ecosystem insights)
 ### Scheduled Services
 | Service | Type | Schedule | Updates |
 |---------|------|----------|---------|
-| YouTube Scraper + Interval Metrics | Cron | Hourly at :15 | youtube_videos, interval_metrics |
+| YouTube Scraper + Interval Metrics | Cron | Every 10 minutes | youtube_videos, interval_metrics |
 | Daily Metrics | Cron | Daily at 2:00 AM | daily_metrics, snapshots |
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
+- **YouTube Scraper + Interval Metrics**: Every 10 minutes (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
 - **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
 - **Analytics Timer**: DISABLED (was running every 5 minutes instead of 2 hours)
 

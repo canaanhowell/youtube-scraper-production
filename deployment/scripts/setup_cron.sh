@@ -27,8 +27,8 @@ EOF
 # Make script executable
 chmod +x /opt/youtube_app/cron_scraper.sh
 
-# Add to crontab (runs at 15 minutes past every hour)
-(crontab -l 2>/dev/null | grep -v "cron_scraper.sh"; echo "15 * * * * /opt/youtube_app/cron_scraper.sh") | crontab -
+# Add to crontab (runs every 10 minutes)
+(crontab -l 2>/dev/null | grep -v "cron_scraper.sh"; echo "*/10 * * * * /opt/youtube_app/cron_scraper.sh") | crontab -
 
 # Show current crontab
 echo "Cron job installed. Current crontab:"
@@ -38,5 +38,5 @@ crontab -l
 touch /opt/youtube_app/logs/cron.log
 chmod 644 /opt/youtube_app/logs/cron.log
 
-echo "YouTube scraper will run hourly at :15 past the hour"
+echo "YouTube scraper will run every 10 minutes"
 echo "Logs: /opt/youtube_app/logs/cron.log"
