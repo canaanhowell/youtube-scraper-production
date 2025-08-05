@@ -143,6 +143,7 @@ youtube_app/
 - Calculates daily velocity and acceleration
 - Updates keyword daily_metrics field
 - Creates category-level snapshots
+- Creates all_youtube aggregate snapshots combining all keywords
 
 ### 4. Category Aggregation
 - Groups keywords by AI category (chatbots, media generation, etc.)
@@ -329,6 +330,9 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
   - `avg_acceleration` (number): Average acceleration
   - `total_views` (number): Total views
   - `keywords` (map): Per-keyword metrics
+- Also creates youtube_categories/all_youtube/*/daily snapshots:
+  - Combines all keywords from all categories
+  - Provides platform-wide aggregate view
 
 #### WRITES to youtube_collection_logs
 - Logs daily metrics run:

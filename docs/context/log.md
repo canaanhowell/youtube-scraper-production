@@ -396,3 +396,9 @@ Any push to GitHub main branch automatically deploys to production!
 - **Removed**: 95+ hash document IDs from youtube_collection_logs
 - **Fixed**: All collection logs now use readable timestamp IDs
 - **Updated**: Cron script to ensure both scraper and interval metrics run together
+
+### All YouTube Aggregation Fix
+- **Issue**: youtube_categories/all_youtube document wasn't being updated by daily metrics
+- **Root Cause**: Daily metrics script only processed categories with keywords, not aggregate views
+- **Solution**: Added _update_all_youtube_snapshot method to create platform-wide aggregation
+- **Impact**: Now creates all_youtube snapshots combining all keywords across all categories

@@ -120,6 +120,9 @@ The YouTube app uses Firebase Firestore as its primary database with the followi
 | `last_updated` | timestamp | Last update time | 2025-08-04T02:00:00Z |
 | `updated_by` | string | Script that updated | "youtube_daily_metrics_unified_vm.py" |
 
+**Special Category - all_youtube**:
+The `all_youtube` document is a special aggregate category that combines metrics from ALL keywords across ALL categories. It provides a platform-wide view of YouTube activity and is automatically updated by the daily metrics script.
+
 **Subcollections**:
 
 #### youtube_categories/{category}/7_days_daily/{date}
