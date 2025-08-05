@@ -181,7 +181,7 @@ youtube_app/
 
 ```
 YouTube Search (via VPN)
-    ↓ (every 10 minutes)
+    ↓ (hourly at :15)
 youtube_collection_manager.py
     ↓ (deduplication check)
 youtube_videos/{keyword}/videos collection
@@ -227,7 +227,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 
 **Purpose**: Orchestrates YouTube video collection across all keywords
 
-**Schedule**: Every 10 minutes (cron)
+**Schedule**: Every hour at :15 (cron)
 
 **Firebase Collections Used**:
 
@@ -267,7 +267,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 
 **Purpose**: Calculates hourly metrics for trending analysis
 
-**Schedule**: Immediately after each scraper run every 10 minutes (via cron_scraper_with_metrics.sh)
+**Schedule**: Immediately after each scraper run hourly at :15 (via deployment/youtube_scraper_wrapper.sh)
 
 **Firebase Collections Used**:
 
@@ -475,13 +475,13 @@ youtube_categories/* (ecosystem insights)
 ### Scheduled Services
 | Service | Type | Schedule | Updates |
 |---------|------|----------|---------|
-| YouTube Scraper + Interval Metrics | Cron | Every 10 minutes | youtube_videos, interval_metrics |
+| YouTube Scraper + Interval Metrics | Cron | Every hour at :15 | youtube_videos, interval_metrics |
 | Daily Metrics | Cron | Daily at 2:00 AM | daily_metrics, snapshots |
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Every 10 minutes (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
-- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
-- **Analytics Timer**: DISABLED (was running every 5 minutes instead of 2 hours)
+- **YouTube Scraper + Interval Metrics**: Every hour at :15 (cron) - `/opt/youtube_app/deployment/youtube_scraper_wrapper.sh`
+- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/scripts/run_daily_metrics_now.sh`
+- **Analytics Timer**: DISABLED (was running every 5 minutes instead of hourly)
 
 ## VPN System
 
@@ -516,7 +516,7 @@ youtube_categories/* (ecosystem insights)
 
 3. **VM Access**:
    ```bash
-   ssh -i /workspace/droplet1 root@134.199.206.143
+   ssh -i /workspace/droplet1 root@134.199.201.56
    ```
 
 ### Monitoring
@@ -798,4 +798,4 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ---
 
 *Last Updated: 2025-08-05*
-*Document Version: 2.4 - Updated with filter fix and renaming*
+*Document Version: 2.5 - Updated with corrected schedules and paths*

@@ -31,7 +31,7 @@ The YouTube app uses Firebase Firestore as its primary database with the followi
 | `updated_at` | timestamp | Last update time | 2025-08-04T14:00:00Z |
 | `last_collected` | timestamp | Last successful collection | 2025-08-04T14:15:00Z |
 | `source` | string | How keyword was added | "manual" or "product_hunt_sync" |
-| `current_velocity` | number | calculation defined in aggregation_app\docs\context\platform_metrics_and_velocity_standardization.md | 12.5 |
+| `current_velocity` | number | Platform-normalized velocity score (% of baseline) | 125.5 |
 | `last_interval_update` | timestamp | Last interval metrics update | 2025-08-04T14:00:00Z |
 | `daily_metrics` | (moved to subcollection) | Daily metrics are now in subcollection | See section 4 |
 
@@ -384,6 +384,6 @@ trend_score_v2 = (0.6 * velocity_score) + (0.4 * momentum_score)
 
 ---
 
-*Document Version: 2.1 - Simplified Platform Baseline System*
-*Last Updated: 2025-08-04*
+*Document Version: 2.2 - Updated for current system architecture*
+*Last Updated: 2025-08-05*
 *Created for: YouTube App Firestore Schema Documentation*

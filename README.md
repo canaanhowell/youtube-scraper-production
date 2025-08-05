@@ -3,7 +3,7 @@
 ## Overview
 Enterprise-ready YouTube data collection app with automated deployment, VPN rotation, and comprehensive analytics.
 
-## Recent Updates (2025-08-04)
+## Recent Updates (2025-08-05)
 
 ### 🔄 Production System Active
 - Successfully deployed with standardized v2.0 metrics system
@@ -19,7 +19,7 @@ Enterprise-ready YouTube data collection app with automated deployment, VPN rota
 - **Standardized Metrics v2.0**: Platform-normalized velocity scoring
 - **Title Filtering**: Strict keyword matching for improved data quality
 
-### 🔧 Latest Improvements (2025-08-04)
+### 🔧 Latest Improvements (2025-08-05)
 - **NEW**: Simplified platform baseline system (hardcoded approach)
 - **Enhanced Metrics**: Platform-normalized velocity scoring operational
 - **Streamlined Management**: Manual baseline control via simple script
@@ -55,7 +55,7 @@ pip install -r requirements.txt
 git push origin main
 
 # SSH to VM and add .env (first time only)
-ssh -i /path/to/key root@134.199.201.56
+ssh -i /workspace/droplet1 root@134.199.201.56
 cd /opt/youtube_app
 vim .env  # Add production credentials
 

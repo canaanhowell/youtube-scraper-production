@@ -42,7 +42,7 @@ The wget YouTube scraper is successfully deployed to production with auto-deploy
 - ✅ Now properly returns videos from last 60 minutes only
 - ✅ Dramatically reduces duplicate processing
 
-### 🔧 **Previous Updates (2025-01-05)**:
+### 🔧 **Previous Updates (2025-08-05)**:
 
 **🎯 Project Renaming** (Latest - 2025-08-05):
 - ✅ Renamed from `wget_youtube_scraper` back to `youtube_app`
@@ -53,7 +53,7 @@ The wget YouTube scraper is successfully deployed to production with auto-deploy
 - ✅ Cleaned up root directory - only config files remain
 - ✅ Organized Python scripts in src/ directories
 
-### 🔧 **Previous Updates (2025-01-04)**:
+### 🔧 **Previous Updates (2025-08-04)**:
 
 **🎯 Platform Baseline System Simplified** (Latest):
 - ✅ Removed complex platform baseline calculation script
@@ -353,7 +353,7 @@ The wget YouTube scraper is now:
 - ✅ All systemd services configured and active
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Every 10 minutes (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
+- **YouTube Scraper + Interval Metrics**: Every hour at :15 (cron) - `/opt/youtube_app/deployment/youtube_scraper_wrapper.sh`
 - **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
 - **Platform Baseline**: Hardcoded at 150.0 videos/day (managed via `src/analytics/metrics/set_platform_baseline.py`)
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
