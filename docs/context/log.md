@@ -18,7 +18,7 @@ You have 2 rules:
 - **Location**: `/opt/youtube_app` on VM
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
-## Current Status (2025-01-05)
+## Current Status (2025-08-05)
 
 ### 🚀 **Deployed and Running**
 
@@ -26,18 +26,28 @@ The wget YouTube scraper is successfully deployed to production with auto-deploy
 
 ✅ **System Status**:
 - **VM**: Running at 134.199.201.56 - 4 vCPU, 8GB RAM
-- **Project Path**: `/opt/youtube_app/` (renamed from youtube_app for clarity)
+- **Project Path**: `/opt/youtube_app/`
 - **VPN System**: 24 verified US Surfshark servers with WireGuard
 - **Firebase**: Connected and operational
 - **Redis**: Upstash Redis REST API configured
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
 - **Analytics Pipeline**: Fully operational with interval and daily metrics
-- **Collection Method**: wget-based (~20 videos per keyword)
+- **Collection Method**: wget-based (20 videos per keyword vs 10 with Playwright)
 
-### 🔧 **Latest Updates (2025-01-05)**:
+### 🔧 **Latest Updates (2025-08-05)**:
 
-**🎯 Project Structure Cleanup** (Latest):
-- ✅ Renamed from youtube_app to youtube_app for clarity
+**🎯 YouTube Filter Fix**:
+- ✅ Fixed YouTube "last hour" filter parameter
+- ✅ Changed from broken `sp=EgIIAw` to working `sp=EgQIARAB`
+- ✅ Now properly returns videos from last 60 minutes only
+- ✅ Dramatically reduces duplicate processing
+
+### 🔧 **Previous Updates (2025-01-05)**:
+
+**🎯 Project Renaming** (Latest - 2025-08-05):
+- ✅ Renamed from `wget_youtube_scraper` back to `youtube_app`
+- ✅ Confirmed wget method captures more videos (20) than Playwright (10)
+- ✅ Updated all references and paths throughout the codebase
 - ✅ Moved all Python scripts from root to src/ directories
 - ✅ Updated all deployment scripts for new paths
 - ✅ Cleaned up root directory - only config files remain

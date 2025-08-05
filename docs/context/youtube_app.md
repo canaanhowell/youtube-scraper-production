@@ -19,14 +19,14 @@ The YouTube App is a production-ready data collection and analytics system that 
 - **Database**: Firebase Firestore (NoSQL)
 - **Cache**: Upstash Redis (REST API)
 - **Runtime**: Ubuntu VM (DigitalOcean Droplet)
-- **Collection**: HTTP-based scraping (~20 videos/keyword)
+- **Collection**: wget-based HTTP scraping (20 videos/keyword)
 - **VPN**: Surfshark via WireGuard (24 US servers)
 - **Container**: Docker with Gluetun for VPN management
 - **Deployment**: GitHub Actions auto-deployment
 
 ### Infrastructure
 - **VM Details**:
-  - IP: 134.199.206.143
+  - IP: 134.199.201.56
   - Specs: 4 vCPU, 8GB RAM
   - OS: Ubuntu (latest)
 - **Access**: SSH via private key (`/workspace/droplet1`)
@@ -639,11 +639,21 @@ f = FirebaseClient(); print('Connected' if f.db else 'Failed')"
 grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ```
 
-## Recent Changes (January 5, 2025)
+## Recent Changes (August 5, 2025)
 
-### Project Restructure and Renaming
+### YouTube Filter Fix and Project Renaming
 - **Status**: ✅ Completed
-- **Major Change**: Renamed from youtube_app to youtube_app
+- **Major Changes**:
+  - Fixed YouTube "last hour" filter from broken `sp=EgIIAw` to working `sp=EgQIARAB`
+  - Renamed project from `wget_youtube_scraper` back to `youtube_app`
+  - Confirmed wget method captures more videos (20) than Playwright (10)
+- **Impact**: Proper hourly video collection with correct time filtering
+
+## Previous Changes (January 5, 2025)
+
+### Project Structure Cleanup
+- **Status**: ✅ Completed
+- **Major Change**: Moved all Python scripts from root to src/ directories
 - **Directory Changes**:
   - All Python scripts moved from root to `src/` directories
   - Better organized structure matching industry standards
@@ -654,7 +664,7 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
   - Cron jobs need updating on VM after deployment
 - **Impact**: Clearer distinction between two YouTube scrapers
 
-## Previous Changes (August 4, 2025)
+## Previous Changes (August 4, 2024)
 
 ### Firebase Schema v2.0 Migration - COMPLETED
 - **Status**: ✅ Completed and Deployed to Production
@@ -787,5 +797,5 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ---
 
-*Last Updated: 2025-01-05*
-*Document Version: 2.3 - Renamed to youtube_app*
+*Last Updated: 2025-08-05*
+*Document Version: 2.4 - Updated with filter fix and renaming*
