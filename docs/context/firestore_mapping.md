@@ -225,11 +225,13 @@ youtube_daily_metrics_unified_vm.py
    - Videos stored under `youtube_videos/{keyword}/videos/{video_id}`
    - Allows efficient querying by keyword
    - Prevents duplicate videos per keyword
+   - **IMPORTANT**: Parent document must exist before adding videos to subcollection
 
 2. **Document IDs**:
-   - Keywords use hyphenated lowercase names for consistency
+   - Keywords use underscore-separated names matching reddit_keywords (e.g., `leonardo_ai`, `stable_diffusion`)
    - Videos use YouTube video IDs for deduplication
-   - Interval metrics use `{keyword}_{timestamp}` for uniqueness
+   - Interval metrics use timestamp-based IDs (e.g., `20250805_141500`)
+   - Collection logs use readable timestamps (e.g., `interval_metrics_2025-08-05_15-30-45_UTC`)
    - Daily snapshots use date strings (YYYY-MM-DD)
 
 3. **Metrics Storage**:
@@ -290,9 +292,9 @@ youtube_daily_metrics_unified_vm.py
   - youtube_videos: Index on collected_at within each keyword
 
 - **Size Estimates**:
-  - ~15-20 active keywords
-  - ~500-1000 videos per keyword
-  - ~12 interval metrics per keyword per day
+  - 16 active keywords (synced with reddit_keywords)
+  - ~500-1000 videos per keyword (6,954 total videos)
+  - ~144 interval metrics per keyword per day (every 10 minutes)
   - ~365 daily metrics per keyword per year
 
 ### 7. platform_metrics (NEW v2.0)
@@ -376,9 +378,9 @@ trend_score_v2 = (0.6 * velocity_score) + (0.4 * momentum_score)
   - platform_metrics: Single document per platform
 
 - **Size Estimates**:
-  - ~15-20 active keywords
-  - ~500-1000 videos per keyword
-  - ~12 interval metrics per keyword per day
+  - 16 active keywords (synced with reddit_keywords)
+  - ~500-1000 videos per keyword (6,954 total videos)
+  - ~144 interval metrics per keyword per day (every 10 minutes)
   - ~365 daily metrics per keyword per year
   - 1 platform baseline document (hardcoded, updated manually)
 

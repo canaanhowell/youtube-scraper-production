@@ -27,20 +27,29 @@ The wget YouTube scraper is successfully deployed to production with auto-deploy
 ✅ **System Status**:
 - **VM**: Running at 134.199.201.56 - 4 vCPU, 8GB RAM
 - **Project Path**: `/opt/youtube_app/`
-- **VPN System**: 24 verified US Surfshark servers with WireGuard
+- **VPN System**: 80 verified US Surfshark servers with WireGuard
 - **Firebase**: Connected and operational
 - **Redis**: Upstash Redis REST API configured
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
 - **Analytics Pipeline**: Fully operational with interval and daily metrics
 - **Collection Method**: wget-based (20 videos per keyword)
+- **Collection Schedule**: Every 10 minutes via cron
 
 ### 🔧 **Latest Updates (2025-08-05)**:
 
+**🎯 Critical Fixes - Video Storage & Keywords**:
+- ✅ Fixed video storage issue - Firestore requires parent documents for subcollections
+- ✅ Created missing parent documents for all 16 keywords
+- ✅ Updated scraper to auto-create parent documents before saving videos
+- ✅ Synchronized all keywords across collections using reddit_keywords as baseline
+- ✅ Merged duplicate video collections (stable_diffusion, leonardo_ai, runway)
+- ✅ Fixed collection schedule to run every 10 minutes with interval metrics
+- ✅ Cleaned up 95+ hash document IDs in youtube_collection_logs
+
 **🎯 YouTube Filter Fix**:
-- ✅ Fixed YouTube "last hour" filter parameter
-- ✅ Changed from broken `sp=EgIIAw` to working `sp=EgQIARAB`
-- ✅ Now properly returns videos from last 60 minutes only
-- ✅ Dramatically reduces duplicate processing
+- ✅ Fixed YouTube filter from `sp=EgQIARAB` to `sp=CAISBAgBEAE%253D`
+- ✅ Now properly sorts by upload date within last hour
+- ✅ Dramatically improves relevance of collected videos
 
 ### 🔧 **Previous Updates (2025-08-05)**:
 
@@ -353,9 +362,37 @@ The wget YouTube scraper is now:
 - ✅ All systemd services configured and active
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Every hour at :15 (cron) - `/opt/youtube_app/deployment/youtube_scraper_wrapper.sh`
+- **YouTube Scraper + Interval Metrics**: Every 10 minutes (cron) - `/opt/youtube_app/cron_scraper.sh`
 - **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
 - **Platform Baseline**: Hardcoded at 150.0 videos/day (managed via `src/analytics/metrics/set_platform_baseline.py`)
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
 Any push to GitHub main branch automatically deploys to production!
+
+## Critical Fixes Applied (August 5, 2025)
+
+### Video Storage Fix
+- **Issue**: Videos were being counted but not stored in Firestore
+- **Root Cause**: Firestore requires parent documents to exist before adding to subcollections
+- **Solution**: Created all 16 missing parent documents and updated scraper to auto-create them
+- **Impact**: All videos now properly save to database
+
+### Keyword Synchronization
+- **Issue**: Mismatched keywords across collections (quotes, different IDs, duplicates)
+- **Solution**: Synchronized all collections using reddit_keywords as baseline
+- **Merges Completed**:
+  - `"chatgpt"` → `chatgpt` (removed duplicate with quotes)
+  - `leonardo ai` → `leonardo_ai` (696 videos)
+  - `stable diffusion` → `stable_diffusion` (620 videos)
+  - `Runway` → `runway` (686 videos)
+- **Result**: All 16 keywords now match exactly across reddit_keywords, youtube_keywords, and youtube_videos
+
+### Collection Schedule Update
+- **Changed**: From hourly to every 10 minutes
+- **Fixed**: Interval metrics now properly runs after each scraper execution
+- **Filter**: Updated to `sp=CAISBAgBEAE%253D` for proper "last hour + sort by upload date"
+
+### Data Cleanup
+- **Removed**: 95+ hash document IDs from youtube_collection_logs
+- **Fixed**: All collection logs now use readable timestamp IDs
+- **Updated**: Cron script to ensure both scraper and interval metrics run together

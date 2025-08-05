@@ -475,19 +475,19 @@ youtube_categories/* (ecosystem insights)
 ### Scheduled Services
 | Service | Type | Schedule | Updates |
 |---------|------|----------|---------|
-| YouTube Scraper + Interval Metrics | Cron | Every hour at :15 | youtube_videos, interval_metrics |
+| YouTube Scraper + Interval Metrics | Cron | Every 10 minutes | youtube_videos, interval_metrics |
 | Daily Metrics | Cron | Daily at 2:00 AM | daily_metrics, snapshots |
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Every hour at :15 (cron) - `/opt/youtube_app/deployment/youtube_scraper_wrapper.sh`
-- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/scripts/run_daily_metrics_now.sh`
+- **YouTube Scraper + Interval Metrics**: Every 10 minutes (cron) - `/opt/youtube_app/cron_scraper.sh`
+- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
 - **Analytics Timer**: DISABLED (was running every 5 minutes instead of hourly)
 
 ## VPN System
 
 ### Architecture
 - **Provider**: Surfshark via WireGuard
-- **Servers**: 24 US city servers
+- **Servers**: 80 US city servers
 - **Container**: Docker with Gluetun
 - **Rotation**: Smart server selection with health tracking
 
@@ -546,8 +546,8 @@ bash deployment/scripts/run_daily_metrics_now.sh
 ## Performance & Scaling
 
 ### Current Performance Metrics
-- **Active Keywords**: 15 (continuously growing via PH sync)
-- **Videos per Keyword**: 500-1000 average
+- **Active Keywords**: 16 (synced with reddit_keywords baseline)
+- **Videos per Keyword**: 500-1000 average (6,954 total videos)
 - **Collection Time**: ~3 minutes for all keywords
 - **Interval Metrics**: ~5 seconds for all keywords
 - **Daily Metrics**: ~3 seconds for aggregation
@@ -641,12 +641,16 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ## Recent Changes (August 5, 2025)
 
-### YouTube Filter Fix and Project Renaming
+### Critical Fixes - Video Storage & Keywords
 - **Status**: ✅ Completed
 - **Major Changes**:
-  - Fixed YouTube "last hour" filter from broken `sp=EgIIAw` to working `sp=EgQIARAB`
-  - Renamed project from `wget_youtube_scraper` back to `youtube_app`
-  - Confirmed wget method captures 20 videos per keyword
+  - Fixed video storage issue - created missing Firestore parent documents
+  - Synchronized all keywords with reddit_keywords baseline (16 keywords)
+  - Merged duplicate video collections (stable_diffusion, leonardo_ai, runway, chatgpt)
+  - Fixed YouTube filter to `sp=CAISBAgBEAE%253D` (sort by upload date + last hour)
+  - Updated collection schedule to run every 10 minutes
+  - Cleaned up 95+ hash document IDs in collection logs
+  - Updated scraper to auto-create parent documents before saving videos
 - **Impact**: Proper hourly video collection with correct time filtering
 
 ## Previous Changes (January 5, 2025)
