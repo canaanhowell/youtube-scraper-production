@@ -72,10 +72,10 @@ class YouTubeScraperProduction:
             logger.info(f"Starting scrape for keyword: {keyword} (pagination={'enabled' if self.enable_pagination else 'disabled'})")
             start_time = datetime.utcnow()
             
-            # Build YouTube search URL with last hour filter AND sort by upload date
-            # sp=CAISBAgBEAE%253D = Sort by upload date + Last hour (URL encoded)
-            # sp=EgQIARAB = Last hour only (no sort)
-            search_url = f'https://www.youtube.com/results?search_query={keyword.replace(" ", "+")}&sp=CAISBAgBEAE%253D'
+            # Build YouTube search URL sorted by upload date (no time filter for 10-min collections)
+            # sp=CAI%253D = Sort by upload date (no time restriction)
+            # sp=CAISBAgBEAE%253D = Sort by upload date + Last hour (too restrictive for 10-min runs)
+            search_url = f'https://www.youtube.com/results?search_query={keyword.replace(" ", "+")}&sp=CAI%253D'
             logger.info(f"Search URL: {search_url}")
             
             # Choose scraping method based on pagination setting
@@ -297,8 +297,8 @@ class YouTubeScraperProduction:
         
         try:
             key = f"video:{video_id}"
-            # Store for 2 hours (7200 seconds) for multi-instance 10-minute collections
-            self.redis.setex(key, 7200, "1")
+            # Store for 24 hours (86400 seconds) for better deduplication across longer runs
+            self.redis.setex(key, 86400, "1")
         except Exception as e:
             logger.error(f"Error marking video: {e}")
     
