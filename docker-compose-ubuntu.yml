@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  youtube-scraper-ubuntu:
+    image: youtube-scraper-ubuntu:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    container_name: youtube-scraper-ubuntu
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - '8001:8001'  # Health check port (different from Alpine)
+    environment:
+      # VPN Configuration
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESS}
+      - SERVER_HOSTNAMES=us-nyc.prod.surfshark.com  # Will be rotated dynamically
+      
+      # DNS and Network
+      - DOT=off
+      - DNS_ADDRESS=1.1.1.1
+      - DNS_KEEP_NAMESERVER=off
+      
+      # Health and Logging
+      - HEALTH_VPN_DURATION_INITIAL=30s
+      - HEALTH_SUCCESS_WAIT_DURATION=10s
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:53
+      - LOG_LEVEL=info
+      
+      # Firewall
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
+      
+      # YouTube App Environment
+      - YOUTUBE_ENABLE_PAGINATION=true
+      - YOUTUBE_MAX_SCROLL_ATTEMPTS=8
+      - YOUTUBE_STRICT_TITLE_FILTER=true
+      - ENVIRONMENT=production
+      
+    restart: unless-stopped
+    volumes:
+      - vpn-data-ubuntu:/gluetun
+      - /opt/wget_youtube_scraper:/app  # Mount app directory
+    working_dir: /app
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 6G  # More memory for Ubuntu + Playwright
+          cpus: '3.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    
+    mem_limit: 6g
+    mem_reservation: 2g
+    cpus: 3.0
+    
+    # Security constraints
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "3"
+
+volumes:
+  vpn-data-ubuntu:
+    driver: local

@@ -43,10 +43,10 @@ def test_basic_functionality():
         sys.path.insert(0, str(Path.cwd()))
         
         # Test simple import (don't run actual scraping)
-        if Path("youtube_scraper_production.py").exists():
+        if Path("src/scripts/youtube_scraper_production.py").exists():
             print("✅ Main scraper file exists")
         
-        if Path("youtube_collection_manager.py").exists():
+        if Path("src/scripts/youtube_collection_manager.py").exists():
             print("✅ Collection manager exists")
             
         return True

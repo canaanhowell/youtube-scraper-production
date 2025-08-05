@@ -1,4 +1,4 @@
-# YouTube App Production System - Smart Auto-Deployment
+# Wget YouTube Scraper - Production System Log
 
 ## Core Instructions for Coding Agents
 
@@ -9,30 +9,41 @@ You have 2 rules:
 
 ## Project Overview
 
-- **Project Name**: youtube_app (formerly youtube_scraper)
+- **Project Name**: wget_youtube_scraper (Alpine-based wget collection)
 - **Database**: Firebase Firestore (credentials via file path in .env)
 - **Caching**: Upstash Redis with REST API client
-- **Runtime**: Python 3.10+ on Ubuntu VM
+- **Runtime**: Python 3.10+ on Alpine Linux VM
 - **Deployment**: GitHub Actions auto-deployment on push to main
 - **VM**: SSH to VM using `/workspace/droplet1` (private key) - IP: 134.199.201.56
+- **Location**: `/opt/wget_youtube_scraper` on VM
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
-## Current Status (2025-08-04)
+## Current Status (2025-01-05)
 
 ### 🚀 **Deployed and Running**
 
-The YouTube app is successfully deployed to production with auto-deployment enabled:
+The wget YouTube scraper is successfully deployed to production with auto-deployment enabled:
 
 ✅ **System Status**:
 - **VM**: Running at 134.199.201.56 - 4 vCPU, 8GB RAM
-- **Project Path**: `/opt/youtube_app/` (successfully migrated from youtube_scraper)
+- **Project Path**: `/opt/wget_youtube_scraper/` (renamed from youtube_app for clarity)
 - **VPN System**: 24 verified US Surfshark servers with WireGuard
 - **Firebase**: Connected and operational
 - **Redis**: Upstash Redis REST API configured
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
 - **Analytics Pipeline**: Fully operational with interval and daily metrics
+- **Collection Method**: wget-based (~20 videos per keyword)
 
-### 🔧 **Latest Updates (2025-08-04)**:
+### 🔧 **Latest Updates (2025-01-05)**:
+
+**🎯 Project Structure Cleanup** (Latest):
+- ✅ Renamed from youtube_app to wget_youtube_scraper for clarity
+- ✅ Moved all Python scripts from root to src/ directories
+- ✅ Updated all deployment scripts for new paths
+- ✅ Cleaned up root directory - only config files remain
+- ✅ Aligned structure with playwright_youtube_scraper
+
+### 🔧 **Previous Updates (2025-01-04)**:
 
 **🎯 Platform Baseline System Simplified** (Latest):
 - ✅ Removed complex platform baseline calculation script
@@ -100,7 +111,7 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 - ✅ Data properly stored in `youtube_videos/{keyword}/videos/`
 - ✅ Interval metrics stored in `youtube_keywords/{keyword}/interval_metrics/`
 
-### 🔧 **Previous Updates (2025-08-03)**:
+### 🔧 **Previous Updates (2025-01-03)**:
 
 **Title Filtering Enhancement** (Latest):
 - ✅ Added YOUTUBE_STRICT_TITLE_FILTER feature
@@ -125,8 +136,8 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 
 **Hourly Automation** (13:27 UTC):
 - Cron job configured to run hourly at :15 past the hour
-- Logs available at `/opt/youtube_app/logs/cron.log`
-- Script: `/opt/youtube_app/cron_scraper.sh`
+- Logs available at `/opt/wget_youtube_scraper/logs/cron.log`
+- Script: `/opt/wget_youtube_scraper/cron_scraper.sh`
 
 **Auto-Deployment Working**:
 - GitHub Actions workflow active
@@ -154,7 +165,7 @@ The YouTube app is successfully deployed to production with auto-deployment enab
 
 ### 📁 **Project Structure**
 ```
-youtube_app/
+wget_youtube_scraper/
 ├── src/
 │   ├── scripts/
 │   │   ├── youtube_collection_manager.py  # Main orchestrator
@@ -318,10 +329,10 @@ python test_new_metrics.py
 
 ## Summary
 
-The YouTube app is now:
+The wget YouTube scraper is now:
 - ✅ Fully deployed to production VM
 - ✅ Auto-deployment enabled and tested
-- ✅ All paths migrated to `/opt/youtube_app`
+- ✅ All paths updated to `/opt/wget_youtube_scraper`
 - ✅ Environment variables properly configured
 - ✅ Ready for production data collection
 - ✅ Running hourly via cron job at :15 past each hour
@@ -332,8 +343,8 @@ The YouTube app is now:
 - ✅ All systemd services configured and active
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
-- **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
+- **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/wget_youtube_scraper/cron_scraper_with_metrics.sh`
+- **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/wget_youtube_scraper/cron_daily_metrics.sh`
 - **Platform Baseline**: Hardcoded at 150.0 videos/day (managed via `src/analytics/metrics/set_platform_baseline.py`)
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 

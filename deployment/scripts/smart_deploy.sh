@@ -6,8 +6,8 @@
 set -e  # Exit on any error
 
 # Configuration
-PROJECT_DIR="/opt/youtube_app"
-BACKUP_DIR="/opt/youtube_app_backups"
+PROJECT_DIR="/opt/wget_youtube_scraper"
+BACKUP_DIR="/opt/wget_youtube_scraper_backups"
 LOG_FILE="/var/log/youtube_deploy.log"
 VENV_PATH="$PROJECT_DIR/venv"
 

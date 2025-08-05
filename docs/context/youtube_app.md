@@ -1,8 +1,8 @@
-# YouTube App - Complete Project Overview
+# Wget YouTube Scraper - Complete Project Overview
 
 ## Executive Summary
 
-The YouTube App is a production-ready data collection and analytics system that continuously monitors YouTube for trending AI-related videos. It provides automated keyword-based video discovery, hourly trend analysis, and aggregated metrics for tracking the AI ecosystem's evolution on YouTube.
+The Wget YouTube Scraper is a production-ready data collection and analytics system that continuously monitors YouTube for trending AI-related videos. It provides automated keyword-based video discovery, hourly trend analysis, and aggregated metrics for tracking the AI ecosystem's evolution on YouTube.
 
 **Key Value Propositions:**
 - Automated discovery of AI-related videos across 15+ keywords
@@ -19,24 +19,24 @@ The YouTube App is a production-ready data collection and analytics system that 
 - **Database**: Firebase Firestore (NoSQL)
 - **Cache**: Upstash Redis (REST API)
 - **Runtime**: Ubuntu VM (DigitalOcean Droplet)
-- **Collection**: Playwright + YouTube search scraping
+- **Collection**: Wget-based HTTP scraping (~20 videos/keyword)
 - **VPN**: Surfshark via WireGuard (24 US servers)
 - **Container**: Docker with Gluetun for VPN management
 - **Deployment**: GitHub Actions auto-deployment
 
 ### Infrastructure
 - **VM Details**:
-  - IP: 134.199.201.56
+  - IP: 134.199.206.143
   - Specs: 4 vCPU, 8GB RAM
   - OS: Ubuntu (latest)
 - **Access**: SSH via private key (`/workspace/droplet1`)
-- **Python Environment**: Virtual environment at `/opt/youtube_app/venv`
+- **Python Environment**: Virtual environment at `/opt/wget_youtube_scraper/venv`
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
 ### Project Structure
 
 ```
-youtube_app/
+wget_youtube_scraper/
 ├── src/
 │   ├── scripts/
 │   │   ├── youtube_collection_manager.py      # Main orchestrator
@@ -202,7 +202,7 @@ youtube_categories/* (category snapshots)
 ### Required Environment Variables
 ```bash
 # Firebase
-GOOGLE_SERVICE_KEY_PATH=/opt/youtube_app/ai-tracker-466821-892ecf5150a3.json
+GOOGLE_SERVICE_KEY_PATH=/opt/wget_youtube_scraper/ai-tracker-466821-892ecf5150a3.json
 FIRESTORE_PROJECT_ID=ai-tracker-466821
 
 # Redis
@@ -479,8 +479,8 @@ youtube_categories/* (ecosystem insights)
 | Daily Metrics | Cron | Daily at 2:00 AM | daily_metrics, snapshots |
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/youtube_app/cron_scraper_with_metrics.sh`
-- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
+- **YouTube Scraper + Interval Metrics**: Hourly at :15 (cron) - `/opt/wget_youtube_scraper/cron_scraper_with_metrics.sh`
+- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/wget_youtube_scraper/cron_daily_metrics.sh`
 - **Analytics Timer**: DISABLED (was running every 5 minutes instead of 2 hours)
 
 ## VPN System
@@ -516,22 +516,22 @@ youtube_categories/* (ecosystem insights)
 
 3. **VM Access**:
    ```bash
-   ssh -i /workspace/droplet1 root@134.199.201.56
+   ssh -i /workspace/droplet1 root@134.199.206.143
    ```
 
 ### Monitoring
 
 1. **Log Files**:
-   - `/opt/youtube_app/logs/scraper.log` - Collection logs
-   - `/opt/youtube_app/logs/analytics.log` - Analytics pipeline
-   - `/opt/youtube_app/logs/daily_metrics.log` - Daily metrics
-   - `/opt/youtube_app/logs/error.log` - Error logs
-   - `/opt/youtube_app/logs/network.log` - API requests
+   - `/opt/wget_youtube_scraper/logs/scraper.log` - Collection logs
+   - `/opt/wget_youtube_scraper/logs/analytics.log` - Analytics pipeline
+   - `/opt/wget_youtube_scraper/logs/daily_metrics.log` - Daily metrics
+   - `/opt/wget_youtube_scraper/logs/error.log` - Error logs
+   - `/opt/wget_youtube_scraper/logs/network.log` - API requests
 
 2. **Health Checks**:
 ```bash
 # Check collection status
-tail -f /opt/youtube_app/logs/scraper.log
+tail -f /opt/wget_youtube_scraper/logs/scraper.log
 
 # View systemd timers
 systemctl list-timers --all | grep youtube
@@ -628,18 +628,33 @@ docker ps | grep youtube-vpn
 docker logs youtube-vpn
 
 # Test collection for one keyword
-cd /opt/youtube_app && source venv/bin/activate
-python youtube_collection_manager.py --test
+cd /opt/wget_youtube_scraper && source venv/bin/activate
+python src/scripts/youtube_collection_manager.py --test
 
 # Check Firebase connection
 python -c "from src.utils.firebase_client_enhanced import FirebaseClient; 
 f = FirebaseClient(); print('Connected' if f.db else 'Failed')"
 
 # View recent errors
-grep ERROR /opt/youtube_app/logs/error.log | tail -20
+grep ERROR /opt/wget_youtube_scraper/logs/error.log | tail -20
 ```
 
-## Recent Changes (August 4, 2025)
+## Recent Changes (January 5, 2025)
+
+### Project Restructure and Renaming
+- **Status**: ✅ Completed
+- **Major Change**: Renamed from youtube_app to wget_youtube_scraper
+- **Directory Changes**:
+  - All Python scripts moved from root to `src/` directories
+  - Better organized structure matching industry standards
+  - Aligned with playwright_youtube_scraper structure
+- **Path Updates**:
+  - All deployment scripts updated for new paths
+  - GitHub workflows updated
+  - Cron jobs need updating on VM after deployment
+- **Impact**: Clearer distinction between two YouTube scrapers
+
+## Previous Changes (August 4, 2025)
 
 ### Firebase Schema v2.0 Migration - COMPLETED
 - **Status**: ✅ Completed and Deployed to Production
@@ -766,11 +781,11 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ## Contact & Support
 
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
-- **Documentation**: `/workspace/youtube_app/docs/`
+- **Documentation**: `/workspace/wget_youtube_scraper/docs/`
 - **VM Access**: SSH key at `/workspace/droplet1`
-- **Logs**: `/opt/youtube_app/logs/`
+- **Logs**: `/opt/wget_youtube_scraper/logs/`
 
 ---
 
-*Last Updated: 2025-08-04*
-*Document Version: 2.2 - Simplified Platform Baseline System*
+*Last Updated: 2025-01-05*
+*Document Version: 2.3 - Renamed to wget_youtube_scraper*

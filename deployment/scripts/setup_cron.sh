@@ -18,7 +18,7 @@ cd /opt/youtube_app
 
 # Activate virtual environment and run scraper
 source venv/bin/activate
-python youtube_collection_manager.py >> /opt/youtube_app/logs/cron.log 2>&1
+python src/scripts/youtube_collection_manager.py >> /opt/youtube_app/logs/cron.log 2>&1
 
 # Log completion
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] YouTube scraper cron job completed" >> /opt/youtube_app/logs/cron.log

@@ -72,8 +72,9 @@ class YouTubeScraperProduction:
             logger.info(f"Starting scrape for keyword: {keyword} (pagination={'enabled' if self.enable_pagination else 'disabled'})")
             start_time = datetime.utcnow()
             
-            # Build YouTube search URL with 24-hour filter
-            search_url = f'https://www.youtube.com/results?search_query={keyword.replace(" ", "+")}&sp=EgIIAQ%253D%253D'
+            # Build YouTube search URL with last hour filter
+            # sp=EgIIAw%253D%253D filters to videos uploaded in the last hour
+            search_url = f'https://www.youtube.com/results?search_query={keyword.replace(" ", "+")}&sp=EgIIAw%253D%253D'
             logger.info(f"Search URL: {search_url}")
             
             # Choose scraping method based on pagination setting

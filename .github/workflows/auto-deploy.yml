@@ -20,19 +20,19 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H 134.199.201.56 >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.VM_IP }} >> ~/.ssh/known_hosts
     
     - name: Test VM connection
       run: |
-        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 root@134.199.201.56 "exit 0"
+        ssh -i ~/.ssh/id_rsa -o ConnectTimeout=10 root@${{ secrets.VM_IP }} "exit 0"
     
     - name: Deploy to VM
       run: |
-        ssh -i ~/.ssh/id_rsa root@134.199.201.56 << 'EOF'
+        ssh -i ~/.ssh/id_rsa root@${{ secrets.VM_IP }} << 'EOF'
           set -e
           
           # Navigate to project directory
-          cd /opt/youtube_app
+          cd /opt/wget_youtube_scraper
           
           # Pull latest changes
           git fetch origin
@@ -51,8 +51,8 @@ jobs:
     
     - name: Verify deployment
       run: |
-        ssh -i ~/.ssh/id_rsa root@134.199.201.56 << 'EOF'
-          cd /opt/youtube_app
+        ssh -i ~/.ssh/id_rsa root@${{ secrets.VM_IP }} << 'EOF'
+          cd /opt/wget_youtube_scraper
           
           # Check core service
           if systemctl is-active youtube-scraper >/dev/null 2>&1; then
