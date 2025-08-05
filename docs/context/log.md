@@ -315,6 +315,42 @@ python src/scripts/youtube_collection_manager_simple.py --instance 1
 - Local testing limited to Firebase connection
 - Full testing requires VM environment
 
+### ✅ **Verification Checklist - MUST CHECK BEFORE DECLARING SUCCESS**
+When implementing any collection system changes, verify ALL of the following:
+
+1. **Process Running**: Check that collection processes start without errors
+   ```bash
+   tail -f logs/collector_*.log
+   # ✓ Should see "Starting collection" messages
+   ```
+
+2. **VPN Connected**: Verify VPN containers are healthy
+   ```bash
+   docker ps | grep youtube-vpn
+   # ✓ Should show "healthy" status
+   ```
+
+3. **Videos Actually Collected**: Check Firebase for actual video data
+   ```bash
+   # Check collection logs in Firebase
+   # ✓ total_videos_collected should be > 0
+   # ✓ videos_per_keyword should show counts > 0 for active keywords
+   ```
+
+4. **No wget Errors**: Verify wget is successfully fetching pages
+   ```bash
+   grep "Failed to fetch" logs/collector_*.log
+   # ✓ Should return no results or very few
+   ```
+
+5. **Firebase Verification**: Check actual video documents exist
+   ```bash
+   # In Firebase console: youtube_videos/{keyword}/videos/
+   # ✓ Should see new video documents with recent timestamps
+   ```
+
+**⚠️ NEVER declare success without verifying actual data collection!**
+
 ### 📝 **Required Environment Variables**
 The `.env` file on VM must include:
 ```env

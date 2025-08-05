@@ -158,7 +158,7 @@ class YouTubeCollectionManager:
                 
                 # Collect videos
                 result = self.scraper.scrape_keyword(keyword)
-                videos_collected = len(result.get('videos', []))
+                videos_collected = result.get('saved_to_firebase', 0)
                 
                 logger.info(f"✅ Successfully collected {videos_collected} videos for '{keyword}'")
                 return videos_collected
