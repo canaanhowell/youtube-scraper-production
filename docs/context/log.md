@@ -32,7 +32,7 @@ The wget YouTube scraper is successfully deployed to production with auto-deploy
 - **Redis**: Upstash Redis REST API configured
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
 - **Analytics Pipeline**: Fully operational with interval and daily metrics
-- **Collection Method**: wget-based (20 videos per keyword vs 10 with Playwright)
+- **Collection Method**: wget-based (20 videos per keyword)
 
 ### 🔧 **Latest Updates (2025-08-05)**:
 
@@ -46,12 +46,12 @@ The wget YouTube scraper is successfully deployed to production with auto-deploy
 
 **🎯 Project Renaming** (Latest - 2025-08-05):
 - ✅ Renamed from `wget_youtube_scraper` back to `youtube_app`
-- ✅ Confirmed wget method captures more videos (20) than Playwright (10)
+- ✅ Confirmed wget method captures 20 videos per keyword
 - ✅ Updated all references and paths throughout the codebase
 - ✅ Moved all Python scripts from root to src/ directories
 - ✅ Updated all deployment scripts for new paths
 - ✅ Cleaned up root directory - only config files remain
-- ✅ Aligned structure with playwright_youtube_scraper
+- ✅ Organized Python scripts in src/ directories
 
 ### 🔧 **Previous Updates (2025-01-04)**:
 
@@ -302,7 +302,7 @@ YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (d
 ## System Architecture
 
 ### **Production Components**:
-- **YouTube Scraper**: Playwright-based scraper with VPN rotation
+- **YouTube Scraper**: wget-based scraper with VPN rotation
 - **VPN Manager**: WireGuard integration with 24 US Surfshark servers
 - **Data Storage**: Firebase Firestore for keywords and results
 - **Cache Layer**: Upstash Redis REST API

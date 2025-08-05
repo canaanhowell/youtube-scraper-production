@@ -451,7 +451,7 @@ avg_acceleration = AVG(keyword.acceleration for all keywords in category)
 ## Data Flow
 
 ```
-YouTube API (via Playwright)
+YouTube Search (via wget)
     ↓
 Collection Manager (hourly)
     ↓
@@ -646,7 +646,7 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 - **Major Changes**:
   - Fixed YouTube "last hour" filter from broken `sp=EgIIAw` to working `sp=EgQIARAB`
   - Renamed project from `wget_youtube_scraper` back to `youtube_app`
-  - Confirmed wget method captures more videos (20) than Playwright (10)
+  - Confirmed wget method captures 20 videos per keyword
 - **Impact**: Proper hourly video collection with correct time filtering
 
 ## Previous Changes (January 5, 2025)
@@ -657,7 +657,7 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 - **Directory Changes**:
   - All Python scripts moved from root to `src/` directories
   - Better organized structure matching industry standards
-  - Aligned with playwright_youtube_scraper structure
+  - Organized Python scripts in src/ directories
 - **Path Updates**:
   - All deployment scripts updated for new paths
   - GitHub workflows updated
