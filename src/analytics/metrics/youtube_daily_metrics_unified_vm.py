@@ -108,6 +108,11 @@ class YouTubeDailyMetricsUnified:
         snapshots_created = self._update_category_daily_snapshots(date)
         results['category_snapshots_created'] = snapshots_created
         
+        # Update all_youtube aggregate snapshot
+        all_youtube_created = self._update_all_youtube_snapshot(date)
+        if all_youtube_created:
+            results['category_snapshots_created'] += all_youtube_created
+        
         # Clean up old snapshots
         self._cleanup_old_snapshots()
         
@@ -558,6 +563,100 @@ class YouTubeDailyMetricsUnified:
             logger.info(f"\n  Category daily snapshots updated successfully")
         elif self.dry_run:
             logger.info(f"\n  [DRY RUN] Would create {snapshots_created} snapshots")
+        
+        return snapshots_created
+    
+    def _update_all_youtube_snapshot(self, date) -> int:
+        """Update all_youtube aggregate snapshot combining all keywords"""
+        logger.info(f"\nUpdating all_youtube aggregate snapshot for {date}")
+        
+        # Define time windows
+        time_windows = {
+            'daily_snapshots_90d': 90,
+            'daily_snapshots_30d': 30,
+            'daily_snapshots_7d': 7
+        }
+        
+        today = datetime.now(timezone.utc).date()
+        days_ago = (today - date).days
+        
+        # Aggregate all keywords across all categories
+        all_keywords_metrics = {}
+        for category, keyword_metrics in self.category_updates.items():
+            all_keywords_metrics.update(keyword_metrics)
+        
+        if not all_keywords_metrics:
+            logger.info("  No keyword metrics to aggregate for all_youtube")
+            return 0
+        
+        # Calculate totals across all keywords
+        total_videos = sum(m.get('video_count', 0) for m in all_keywords_metrics.values())
+        total_views = sum(m.get('total_views', 0) for m in all_keywords_metrics.values())
+        total_new_videos = sum(m.get('new_videos_in_day', 0) for m in all_keywords_metrics.values())
+        total_velocity_normalized = sum(m.get('velocity', 0) for m in all_keywords_metrics.values())
+        
+        # Calculate averages
+        keyword_count = len(all_keywords_metrics)
+        avg_velocity_normalized = total_velocity_normalized / keyword_count if keyword_count > 0 else 0
+        
+        total_acceleration = sum(m.get('acceleration', 1.0) for m in all_keywords_metrics.values())
+        avg_acceleration = total_acceleration / keyword_count if keyword_count > 0 else 1.0
+        
+        # Prepare keyword data
+        keywords_data = {}
+        for keyword, metric in all_keywords_metrics.items():
+            keywords_data[keyword] = {
+                'video_count': metric.get('video_count', 0),
+                'new_videos_in_day': metric.get('new_videos_in_day', 0),
+                'velocity': metric.get('velocity', 0),
+                'acceleration': metric.get('acceleration', 1.0),
+                'total_views': metric.get('total_views', 0)
+            }
+        
+        # Create snapshot data
+        snapshot_data = {
+            'date': str(date),
+            'timestamp': datetime.combine(date, datetime.min.time()).replace(tzinfo=timezone.utc),
+            'total_videos': total_videos,
+            'total_new_videos': total_new_videos,
+            'velocity': round(total_velocity_normalized, 1),  # Sum of all keyword velocities
+            'acceleration': round(avg_acceleration, 2),  # Average acceleration
+            'total_views': total_views,
+            'keywords': keywords_data
+        }
+        
+        # Update time window subcollections
+        category_ref = self.db.collection('youtube_categories').document('all_youtube')
+        snapshots_created = 0
+        
+        for subcollection_name, window_days in time_windows.items():
+            # Check if date falls within this window
+            if days_ago < window_days:
+                subcollection_ref = category_ref.collection(subcollection_name)
+                doc_ref = subcollection_ref.document(str(date))
+                
+                if not self.dry_run:
+                    doc_ref.set(snapshot_data, merge=True)
+                    snapshots_created += 1
+                else:
+                    logger.info(f"    [DRY RUN] Would update {subcollection_name}/{str(date)}")
+        
+        # Update the main all_youtube document
+        if not self.dry_run:
+            category_ref.set({
+                'category': 'all_youtube',
+                'keywords': list(all_keywords_metrics.keys()),
+                'last_updated': datetime.now(timezone.utc),
+                'updated_by': 'youtube_daily_metrics_unified_vm.py'
+            }, merge=True)
+        
+        logger.info(f"  all_youtube aggregate snapshot created:")
+        logger.info(f"    Total keywords: {keyword_count}")
+        logger.info(f"    Total videos: {total_videos}")
+        logger.info(f"    Total views: {total_views:,}")
+        logger.info(f"    Total new videos: {total_new_videos}")
+        logger.info(f"    Avg velocity (normalized): {avg_velocity_normalized:.1f}")
+        logger.info(f"    Avg acceleration: {avg_acceleration:.2f}")
         
         return snapshots_created
     
