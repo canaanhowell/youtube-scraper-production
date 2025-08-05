@@ -201,6 +201,11 @@ class FirebaseClient:
             timestamp = datetime.utcnow()
             doc_id = timestamp.strftime("%Y-%m-%d_%H-%M-%S_UTC")
             
+            # Validation: Ensure we're using a proper timestamp ID, not a hash
+            if not doc_id or len(doc_id) < 10 or '_' not in doc_id:
+                self.logger.error(f"Invalid document ID format: {doc_id}")
+                raise ValueError(f"Document ID must be a timestamp format, got: {doc_id}")
+            
             # Prepare log data
             log_data = {
                 'timestamp': firestore.SERVER_TIMESTAMP,

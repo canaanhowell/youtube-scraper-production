@@ -15,7 +15,7 @@ import traceback
 # Add project path to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.firebase_client import FirebaseClient
+from .firebase_client import FirebaseClient
 
 
 @dataclass
@@ -136,6 +136,9 @@ class YouTubeCollectionLogger:
             session_id=session_id,
             start_time=datetime.now(timezone.utc)
         )
+        
+        # Track the Firebase document ID for updates
+        self.firebase_doc_id = None
         
         self.logger.info(f"Collection logger initialized for session: {session_id}")
     
@@ -357,11 +360,20 @@ class YouTubeCollectionLogger:
                 doc_data['keyword_errors'] = keyword_errors
         
         try:
-            # Store in youtube_collection_logs collection
-            doc_ref = self.firebase_client.db.collection('youtube_collection_logs').document(self.collection_run.session_id)
+            # Create a proper timestamp-based document ID
+            # Format: collection_YYYY-MM-DD_HH-MM-SS_UTC
+            timestamp = datetime.now(timezone.utc)
+            doc_id = f"collection_{timestamp.strftime('%Y-%m-%d_%H-%M-%S')}_UTC"
+            
+            # Store in youtube_collection_logs collection with timestamp ID
+            doc_ref = self.firebase_client.db.collection('youtube_collection_logs').document(doc_id)
             doc_ref.set(doc_data, merge=True)
             
-            self.logger.debug(f"Logged {event_type} to Firebase")
+            # Store the document ID for future updates
+            if event_type == 'collection_started':
+                self.firebase_doc_id = doc_id
+            
+            self.logger.debug(f"Logged {event_type} to Firebase with ID: {doc_id}")
             
         except Exception as e:
             self.logger.error(f"Failed to log to Firebase: {e}")
@@ -393,7 +405,16 @@ class YouTubeCollectionLogger:
         }
         
         try:
-            doc_ref = self.firebase_client.db.collection('youtube_collection_logs').document(self.collection_run.session_id)
+            # Use the stored document ID if available, otherwise create a new one
+            if self.firebase_doc_id:
+                doc_id = self.firebase_doc_id
+            else:
+                # Fallback: create a new timestamp-based ID
+                timestamp = datetime.now(timezone.utc)
+                doc_id = f"keyword_update_{timestamp.strftime('%Y-%m-%d_%H-%M-%S')}_UTC"
+                self.logger.warning(f"No stored doc_id, creating new document: {doc_id}")
+            
+            doc_ref = self.firebase_client.db.collection('youtube_collection_logs').document(doc_id)
             doc_ref.set(update_data, merge=True)
             
             self.logger.debug(f"Logged keyword '{keyword}' completion to Firebase")

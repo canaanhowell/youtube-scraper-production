@@ -140,7 +140,7 @@ class YouTubeCollectionManager:
             # Stop current container
             logger.info("Stopping VPN container...")
             result = subprocess.run(
-                ['docker', 'compose', 'down'],
+                ['docker', 'compose', 'stop', 'vpn'],
                 cwd=self.docker_compose_path.parent,
                 capture_output=True,
                 text=True
@@ -150,8 +150,16 @@ class YouTubeCollectionManager:
                 logger.error(f"Failed to stop container: {result.stderr}")
                 return False
             
+            # Remove the container
+            result = subprocess.run(
+                ['docker', 'compose', 'rm', '-f', 'vpn'],
+                cwd=self.docker_compose_path.parent,
+                capture_output=True,
+                text=True
+            )
+            
             # Wait for container to fully stop
-            time.sleep(5)
+            time.sleep(2)
             
             # Start with new server
             logger.info(f"Starting VPN with server: {server}")
@@ -163,7 +171,7 @@ class YouTubeCollectionManager:
             env['VPN_SERVER'] = gluetun_server
             
             result = subprocess.run(
-                ['docker', 'compose', 'up', '-d'],
+                ['docker', 'compose', 'up', '-d', 'vpn'],
                 cwd=self.docker_compose_path.parent,
                 env=env,
                 capture_output=True,

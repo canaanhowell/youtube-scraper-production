@@ -159,7 +159,7 @@ The `all_youtube` document is a special aggregate category that combines metrics
 
 **Purpose**: Audit trail for all collection runs and operations
 
-**Document ID**: Auto-generated
+**Document ID**: Timestamp-based format (e.g., `collection_2025-08-05_14-30-45_UTC`, `interval_metrics_2025-08-05_15-00-00_UTC`, `daily_metrics_2025-08-05_02-00-00_UTC`)
 
 **Fields vary by operation type**:
 
@@ -168,16 +168,20 @@ The `all_youtube` document is a special aggregate category that combines metrics
 | Field Name | Type | Description | Example |
 |------------|------|-------------|---------|
 | `timestamp` | timestamp | Run timestamp | 2025-08-04T14:15:00Z |
-| `session_id` | string | Unique session identifier | "session_1754316901" |
-| `script_name` | string | Script that ran | "youtube_collection_manager.py" |
-| `keywords_processed` | number | Keywords attempted | 15 |
+| `session_id` | string | Unique session identifier | "session_1754316901_1" |
+| `script_name` | string | Script that ran | "youtube_collection_manager_simple.py" |
+| `keywords_processed` | array | List of keywords processed | ["claude", "chatgpt", "gemini"] |
 | `keywords_successful` | number | Successfully collected | 15 |
 | `keywords_failed` | number | Failed collections | 0 |
 | `total_videos_collected` | number | New videos found | 45 |
-| `vpn_servers_used` | array | VPN servers used | ["us-nyc", "us-lax"] |
+| `videos_per_keyword` | map | Videos collected per keyword | {"claude": 20, "chatgpt": 15, "gemini": 10} |
+| `vpn_servers_used` | array | VPN containers used | ["youtube-vpn-1"] |
 | `success_rate` | number | Success percentage | 100.0 |
 | `errors` | array | Any errors encountered | [] |
 | `duration_seconds` | number | Total run time | 180.5 |
+| `container` | string | VPN container name | "youtube-vpn-1" |
+| `instance_id` | number | Instance number (1-3) | 1 |
+| `vm_hostname` | string | VM hostname | "youtube-vm" |
 
 #### Interval Metrics Logs
 
@@ -381,11 +385,12 @@ trend_score_v2 = (0.6 * velocity_score) + (0.4 * momentum_score)
   - platform_metrics: Single document per platform
 
 - **Size Estimates**:
-  - 16 active keywords (synced with reddit_keywords)
-  - ~500-1000 videos per keyword (6,954 total videos)
+  - 16 active keywords (synced with reddit_keywords) - can scale to 40+
+  - ~500-1000 videos per keyword
   - ~144 interval metrics per keyword per day (every 10 minutes)
   - ~365 daily metrics per keyword per year
   - 1 platform baseline document (hardcoded, updated manually)
+  - 3 parallel collection instances for scaling
 
 ---
 

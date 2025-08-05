@@ -483,9 +483,13 @@ youtube_categories/* (ecosystem insights)
 | Daily Metrics | Cron | Daily at 2:00 AM | daily_metrics, snapshots |
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Every 10 minutes (cron) - `/opt/youtube_app/cron_scraper.sh`
-- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
-- **Analytics Timer**: DISABLED (was running every 5 minutes instead of hourly)
+- **Multi-Instance Collection**: Every 10 minutes (cron) - `/opt/youtube_app/deployment/cron_scraper_multi.sh`
+  - Instance 1: youtube-vpn-1 container, dynamic keyword distribution
+  - Instance 2: youtube-vpn-2 container, dynamic keyword distribution  
+  - Instance 3: youtube-vpn-3 container, dynamic keyword distribution
+- **Interval Metrics**: Runs after all instances complete
+- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/cron_daily_metrics.sh`
+- **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
 ## VPN System
 
@@ -550,12 +554,12 @@ bash deployment/scripts/run_daily_metrics_now.sh
 ## Performance & Scaling
 
 ### Current Performance Metrics
-- **Active Keywords**: 16 (synced with reddit_keywords baseline)
-- **Videos per Keyword**: 500-1000 average (6,954 total videos)
-- **Collection Time**: ~3 minutes for all keywords
+- **Active Keywords**: 16 (synced with reddit_keywords baseline) - can scale to 40+
+- **Videos per Keyword**: 500-1000 average
+- **Collection Time**: <10 minutes even with 40+ keywords (multi-instance)
 - **Interval Metrics**: ~5 seconds for all keywords
 - **Daily Metrics**: ~3 seconds for aggregation
-- **VPN Rotation**: <10 seconds per server change
+- **VPN Containers**: 3 parallel containers (youtube-vpn-1, youtube-vpn-2, youtube-vpn-3)
 
 ### Scaling Limits
 - **Keywords**: Designed for 100+ keywords
@@ -644,6 +648,39 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ```
 
 ## Recent Changes (August 5, 2025)
+
+### Multi-Instance Collection System Implementation
+- **Status**: ✅ Completed and Active
+- **Issue**: Keyword count increased (was 42 at peak), causing collection to exceed 10-minute cron interval
+- **Root Cause**: Multiple collection instances overlapping and fighting over single VPN container
+- **Solution Implemented**:
+  - Created docker-compose-multi.yml with 3 VPN containers (ports 8000, 8003, 8004)
+  - Built youtube_collection_manager_simple.py for simpler VPN handling
+  - Dynamic keyword distribution across instances (evenly divided)
+  - Process locking prevents overlapping runs of same instance
+  - Fixed Firebase logging format with proper keywords_processed array and videos_per_keyword map
+  - Added update_keyword_timestamp method to FirebaseClient
+- **Files Created/Modified**:
+  - `/workspace/youtube_app/docker-compose-multi.yml`
+  - `/workspace/youtube_app/src/scripts/youtube_collection_manager_simple.py`
+  - `/workspace/youtube_app/src/utils/firebase_client_enhanced.py`
+  - `/workspace/youtube_app/deployment/youtube_collector_[1-3].sh`
+  - `/workspace/youtube_app/deployment/cron_scraper_multi.sh`
+- **Impact**: System can now handle 40+ keywords without collection overlaps
+
+## Recent Changes (August 5, 2025)
+
+### Collection Logs Hash ID Fix
+- **Status**: ✅ Completed
+- **Issue**: Documents in youtube_collection_logs were being created with auto-generated hash IDs
+- **Root Cause**: collection_logger.py was using session_id as document ID
+- **Major Changes**:
+  - Updated collection_logger.py to generate timestamp-based IDs (collection_YYYY-MM-DD_HH-MM-SS_UTC)
+  - Added validation to all Firebase client methods (firebase_client.py, firebase_client_enhanced.py, firebase_client_with_logging.py)
+  - Created monitoring tool: `src/scripts/utilities/monitor_collection_logs.py`
+  - Created cleanup script: `check_and_fix_collection_logs.py`
+  - Fixed import paths in collection_logger.py
+- **Impact**: All collection logs now use consistent, readable timestamp-based document IDs
 
 ### Critical Fixes - Video Storage & Keywords
 - **Status**: ✅ Completed
@@ -806,4 +843,4 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ---
 
 *Last Updated: 2025-08-05*
-*Document Version: 2.5 - Updated with corrected schedules and paths*
+*Document Version: 2.6 - Added collection logs hash ID fix documentation*

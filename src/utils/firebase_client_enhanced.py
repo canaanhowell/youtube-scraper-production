@@ -196,6 +196,11 @@ class FirebaseClient:
             timestamp = datetime.utcnow()
             doc_id = timestamp.strftime("%Y-%m-%d_%H-%M-%S_UTC")
             
+            # Validation: Ensure we're using a proper timestamp ID, not a hash
+            if not doc_id or len(doc_id) < 10 or '_' not in doc_id:
+                self.logger.error(f"Invalid document ID format: {doc_id}")
+                raise ValueError(f"Document ID must be a timestamp format, got: {doc_id}")
+            
             # Prepare log data
             log_data = {
                 'timestamp': firestore.SERVER_TIMESTAMP,
@@ -265,6 +270,82 @@ class FirebaseClient:
                 
             except Exception as e:
                 self.logger.error(f"Failed to get keywords (attempt {attempt}/{max_retries}): {e}")
+                
+                if attempt < max_retries:
+                    # Add jitter to retry delay to avoid thundering herd
+                    jittered_delay = retry_delay * (0.5 + random.random())
+                    self.logger.info(f"Retrying in {jittered_delay:.1f} seconds...")
+                    time.sleep(jittered_delay)
+                else:
+                    self.logger.error("All attempts to retrieve keywords failed")
+                    # Return empty list but log the failure
+                    return []
+        
+        return []
+    
+    def update_keyword_timestamp(self, keyword: str) -> bool:
+        """Update the last_collected timestamp for a keyword"""
+        try:
+            # Find the keyword document
+            keywords_ref = self.db.collection('youtube_keywords')
+            docs = keywords_ref.where('keyword', '==', keyword).limit(1).stream()
+            
+            doc = next(docs, None)
+            if doc:
+                # Update the last_collected timestamp
+                doc.reference.update({
+                    'last_collected': firestore.SERVER_TIMESTAMP,
+                    'last_collected_readable': datetime.utcnow().isoformat()
+                })
+                self.logger.info(f"Updated last_collected timestamp for keyword: {keyword}")
+                return True
+            else:
+                self.logger.warning(f"Keyword not found in Firebase: {keyword}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Failed to update keyword timestamp: {e}")
+            return False
+    
+    def get_keywords_with_data(self, max_retries: int = 3, retry_delay: float = 2.0) -> List[Dict]:
+        """Get active keywords with full document data from Firebase youtube_keywords collection"""
+        import time
+        import random
+        
+        for attempt in range(1, max_retries + 1):
+            try:
+                self.logger.info(f"Retrieving keywords with data from Firebase (attempt {attempt}/{max_retries})...")
+                
+                keywords = []
+                keywords_ref = self.db.collection('youtube_keywords')
+                docs = keywords_ref.where('active', '==', True).stream()
+                
+                # Track document details for debugging
+                doc_count = 0
+                for doc in docs:
+                    doc_count += 1
+                    doc_data = doc.to_dict()
+                    keyword = doc_data.get('keyword') or doc_data.get('name')
+                    if keyword:
+                        # Include the full document data
+                        doc_data['doc_id'] = doc.id
+                        keywords.append(doc_data)
+                        self.logger.debug(f"Found active keyword: '{keyword}' (doc_id: {doc.id})")
+                    else:
+                        self.logger.warning(f"Document {doc.id} missing keyword/name field: {doc_data}")
+                
+                # Enhanced logging with timestamp for freshness verification
+                current_time = datetime.utcnow().isoformat()
+                self.logger.info(f"Successfully retrieved {len(keywords)} active keywords with data from {doc_count} documents")
+                self.logger.info(f"Keywords retrieved at: {current_time}")
+                
+                if not keywords:
+                    self.logger.warning("No active keywords found in Firebase - this might indicate a data issue")
+                
+                return keywords
+                
+            except Exception as e:
+                self.logger.error(f"Failed to get keywords with data (attempt {attempt}/{max_retries}): {e}")
                 
                 if attempt < max_retries:
                     # Add jitter to retry delay to avoid thundering herd

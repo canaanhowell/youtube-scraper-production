@@ -46,7 +46,7 @@ except ImportError:
     logger.warning("Playwright not available - pagination disabled")
 
 class YouTubeScraperProduction:
-    def __init__(self):
+    def __init__(self, container_name: str = "youtube-vpn"):
         # Load environment
         load_env()
         
@@ -55,7 +55,7 @@ class YouTubeScraperProduction:
         self.redis = RedisClient()
         
         # Container name for VPN
-        self.container_name = "youtube-vpn"
+        self.container_name = container_name
         
         # Title filtering configuration
         self.strict_title_filter = os.getenv('YOUTUBE_STRICT_TITLE_FILTER', 'true').lower() == 'true'

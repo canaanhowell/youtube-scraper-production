@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  vpn-1:
+    image: qmcgaw/gluetun
+    container_name: youtube-vpn-1
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - '8000:8000'  # Health check port
+    environment:
+      # VPN Configuration
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESS}
+      # Instance 1 uses servers 1-8 of the US pool
+      - SERVER_HOSTNAMES=${VPN_SERVER_1:-us-nyc.prod.surfshark.com}
+      
+      # DNS and Network
+      - DOT=off
+      - DNS_ADDRESS=1.1.1.1
+      - DNS_KEEP_NAMESERVER=off
+      
+      # Health and Logging
+      - HEALTH_VPN_DURATION_INITIAL=30s
+      - HEALTH_SUCCESS_WAIT_DURATION=10s
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:53
+      - LOG_LEVEL=info
+      
+      # Firewall
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
+      
+    restart: unless-stopped
+    volumes:
+      - vpn-data-1:/gluetun
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    mem_limit: 2g
+    mem_reservation: 512m
+    cpus: 1.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
+
+  vpn-2:
+    image: qmcgaw/gluetun
+    container_name: youtube-vpn-2
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - '8003:8000'  # Health check port
+    environment:
+      # VPN Configuration
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESS_2:-10.14.0.3/16}
+      # Instance 2 uses servers 9-16 of the US pool
+      - SERVER_HOSTNAMES=${VPN_SERVER_2:-us-lax.prod.surfshark.com}
+      
+      # DNS and Network
+      - DOT=off
+      - DNS_ADDRESS=1.1.1.1
+      - DNS_KEEP_NAMESERVER=off
+      
+      # Health and Logging
+      - HEALTH_VPN_DURATION_INITIAL=30s
+      - HEALTH_SUCCESS_WAIT_DURATION=10s
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:53
+      - LOG_LEVEL=info
+      
+      # Firewall
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
+      
+    restart: unless-stopped
+    volumes:
+      - vpn-data-2:/gluetun
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    mem_limit: 2g
+    mem_reservation: 512m
+    cpus: 1.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
+
+  vpn-3:
+    image: qmcgaw/gluetun
+    container_name: youtube-vpn-3
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - '8004:8000'  # Health check port
+    environment:
+      # VPN Configuration
+      - VPN_SERVICE_PROVIDER=surfshark
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${SURFSHARK_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${SURFSHARK_ADDRESS_3:-10.14.0.4/16}
+      # Instance 3 uses servers 17-24 of the US pool
+      - SERVER_HOSTNAMES=${VPN_SERVER_3:-us-chi.prod.surfshark.com}
+      
+      # DNS and Network
+      - DOT=off
+      - DNS_ADDRESS=1.1.1.1
+      - DNS_KEEP_NAMESERVER=off
+      
+      # Health and Logging
+      - HEALTH_VPN_DURATION_INITIAL=30s
+      - HEALTH_SUCCESS_WAIT_DURATION=10s
+      - HEALTH_TARGET_ADDRESS=1.1.1.1:53
+      - LOG_LEVEL=info
+      
+      # Firewall
+      - FIREWALL_OUTBOUND_SUBNETS=172.16.0.0/12,192.168.0.0/16,10.0.0.0/8
+      
+    restart: unless-stopped
+    volumes:
+      - vpn-data-3:/gluetun
+    healthcheck:
+      test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    mem_limit: 2g
+    mem_reservation: 512m
+    cpus: 1.0
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
+
+volumes:
+  vpn-data-1:
+    driver: local
+  vpn-data-2:
+    driver: local
+  vpn-data-3:
+    driver: local

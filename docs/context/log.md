@@ -20,22 +20,49 @@ You have 2 rules:
 
 ## Current Status (2025-08-05)
 
-### 🚀 **Deployed and Running**
+### 🚀 **Multi-Instance Collection System Active**
 
-The wget YouTube scraper is successfully deployed to production with auto-deployment enabled:
+The YouTube scraper is running with a new multi-instance architecture to handle scaling:
 
 ✅ **System Status**:
 - **VM**: Running at 134.199.201.56 - 4 vCPU, 8GB RAM
 - **Project Path**: `/opt/youtube_app/`
-- **VPN System**: 80 verified US Surfshark servers with WireGuard
-- **Firebase**: Connected and operational
+- **VPN System**: 3 parallel VPN containers (youtube-vpn-1, youtube-vpn-2, youtube-vpn-3)
+- **Collection**: 3 instances processing keywords in parallel
+- **Firebase**: Connected with proper logging format
 - **Redis**: Upstash Redis REST API configured
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
 - **Analytics Pipeline**: Fully operational with interval and daily metrics
 - **Collection Method**: wget-based (20 videos per keyword)
-- **Collection Schedule**: Every 10 minutes via cron
+- **Collection Schedule**: Every 10 minutes via cron (multi-instance)
 
-### 🔧 **Latest Updates (2025-08-05)**:
+### 🔧 **Latest Updates (2025-08-05 Evening)**:
+
+**🎯 Multi-Instance Collection System**:
+- ✅ Implemented 3-instance parallel collection to handle keyword scaling
+- ✅ Created docker-compose-multi.yml with 3 VPN containers (ports 8000, 8003, 8004)
+- ✅ Dynamic keyword distribution across instances (currently 5-5-6 split for 16 keywords)
+- ✅ Created youtube_collection_manager_simple.py for simpler VPN handling
+- ✅ Process locking prevents overlapping runs of same instance
+- ✅ Fixed Firebase logging format with proper keywords_processed array and videos_per_keyword map
+- ✅ Added update_keyword_timestamp method to FirebaseClient
+- ✅ System can now handle 40+ keywords without collection overlaps
+
+**🎯 Collection Issue Resolution**:
+- **Problem**: Keywords increased causing collections to take >10 minutes
+- **Root Cause**: Multiple instances overlapping and fighting over single VPN container
+- **Solution**: 3 parallel instances with dedicated VPN containers
+- **Result**: Collections complete in <10 minutes even with 40+ keywords
+
+### 🔧 **Earlier Updates (2025-08-05)**:
+
+**🎯 Collection Logs Hash ID Fix**:
+- ✅ Identified root cause: collection_logger.py was using session_id as document ID
+- ✅ Fixed all Firebase client implementations to validate timestamp-based IDs
+- ✅ Updated collection_logger.py to generate proper timestamp IDs (collection_YYYY-MM-DD_HH-MM-SS_UTC)
+- ✅ Added ID validation to prevent future hash ID creation
+- ✅ Created monitoring tools to detect and clean up hash IDs
+- ✅ All collection logs now use consistent readable timestamp format
 
 **🎯 Critical Fixes - Video Storage & Keywords**:
 - ✅ Fixed video storage issue - Firestore requires parent documents for subcollections
@@ -245,11 +272,14 @@ YOUTUBE_STRICT_TITLE_FILTER=false # Collect all videos from search results
 # Check cron job status
 crontab -l
 
-# View collection logs
+# View collection logs for all instances
+tail -f logs/collector_1.log logs/collector_2.log logs/collector_3.log
+
+# View main scraper log
 tail -f logs/scraper.log
 
-# View cron logs
-tail -f logs/cron.log
+# View multi-instance cron log
+tail -f logs/cron_multi.log
 
 # View analytics logs
 tail -f logs/analytics.log
@@ -257,12 +287,11 @@ tail -f logs/analytics.log
 # View daily metrics logs
 tail -f logs/daily_metrics.log
 
+# Check VPN containers status
+docker ps | grep youtube-vpn
+
 # Check systemd timers
 systemctl list-timers --all | grep youtube
-
-# Check analytics service status
-systemctl status youtube-analytics.timer
-systemctl status youtube-analytics.service
 
 # Check deployment log
 tail -f /var/log/youtube_deploy.log
@@ -274,8 +303,9 @@ python3 deployment/scripts/backup_manager.py rollback
 # Run daily metrics manually if needed
 bash deployment/scripts/run_daily_metrics_now.sh
 
-# Fix daily metrics cron if needed
-bash deployment/scripts/fix_daily_metrics_cron.sh
+# Test individual instance
+cd /opt/youtube_app && source venv/bin/activate
+python src/scripts/youtube_collection_manager_simple.py --instance 1
 ```
 
 ## Important Notes
@@ -344,6 +374,15 @@ python -c "from src.utils.firebase_client import FirebaseClient; fb = FirebaseCl
 
 # Test new standardized metrics
 python test_new_metrics.py
+
+# Monitor for hash document IDs in collection logs
+python src/scripts/utilities/monitor_collection_logs.py
+
+# Check and clean up hash IDs if found
+python check_and_fix_collection_logs.py
+
+# Clean up any remaining hash document IDs
+python cleanup_hash_logs.py
 ```
 
 ## Summary
@@ -362,8 +401,12 @@ The wget YouTube scraper is now:
 - ✅ All systemd services configured and active
 
 ### Active Services:
-- **YouTube Scraper + Interval Metrics**: Every 10 minutes (cron) - `/opt/youtube_app/cron_scraper.sh`
-- **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/cron_daily_metrics.sh`
+- **Multi-Instance Collection**: Every 10 minutes (cron) - `/opt/youtube_app/deployment/cron_scraper_multi.sh`
+  - Instance 1: youtube-vpn-1 container, processes keywords 1-5
+  - Instance 2: youtube-vpn-2 container, processes keywords 6-10  
+  - Instance 3: youtube-vpn-3 container, processes keywords 11-16
+- **Interval Metrics**: Runs after all instances complete
+- **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/cron_daily_metrics.sh`
 - **Platform Baseline**: Hardcoded at 150.0 videos/day (managed via `src/analytics/metrics/set_platform_baseline.py`)
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
@@ -402,3 +445,12 @@ Any push to GitHub main branch automatically deploys to production!
 - **Root Cause**: Daily metrics script only processed categories with keywords, not aggregate views
 - **Solution**: Added _update_all_youtube_snapshot method to create platform-wide aggregation
 - **Impact**: Now creates all_youtube snapshots combining all keywords across all categories
+
+### Collection Logs Hash ID Fix
+- **Issue**: Documents in youtube_collection_logs were being created with auto-generated hash IDs
+- **Root Cause**: collection_logger.py was using session_id as document ID instead of timestamp format
+- **Solution**: 
+  - Updated collection_logger.py to generate timestamp-based IDs (collection_YYYY-MM-DD_HH-MM-SS_UTC)
+  - Added validation to all Firebase client methods to ensure proper ID format
+  - Created monitoring and cleanup tools to detect and remove hash IDs
+- **Impact**: All collection logs now use consistent, readable timestamp-based document IDs
