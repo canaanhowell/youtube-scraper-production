@@ -356,6 +356,17 @@ class YouTubeScraperProduction:
             video_id = video_data['id'].replace('shorts/', '').replace('/shorts/', '')
             video_data['id'] = video_id
             
+            # Ensure parent document exists (required for subcollections)
+            parent_ref = self.firebase.db.collection('youtube_videos').document(keyword)
+            if not parent_ref.get().exists:
+                parent_ref.set({
+                    'keyword': keyword,
+                    'created_at': datetime.utcnow(),
+                    'updated_at': datetime.utcnow(),
+                    'note': 'Parent document for videos subcollection'
+                })
+                logger.debug(f"Created parent document for keyword: {keyword}")
+            
             # Store in Firebase
             self.firebase.db.collection('youtube_videos').document(keyword).collection('videos').document(video_id).set(video_data)
             
