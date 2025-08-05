@@ -1,7 +1,7 @@
-# YouTube Scraper Production System
+# YouTube App
 
 ## Overview
-Enterprise-ready YouTube scraper with automated deployment, VPN rotation, and comprehensive analytics.
+Enterprise-ready YouTube data collection app with automated deployment, VPN rotation, and comprehensive analytics.
 
 ## Recent Updates (2025-08-04)
 

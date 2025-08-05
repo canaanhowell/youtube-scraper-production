@@ -32,7 +32,7 @@ jobs:
           set -e
           
           # Navigate to project directory
-          cd /opt/wget_youtube_scraper
+          cd /opt/youtube_app
           
           # Pull latest changes
           git fetch origin
@@ -52,7 +52,7 @@ jobs:
     - name: Verify deployment
       run: |
         ssh -i ~/.ssh/id_rsa root@${{ secrets.VM_IP }} << 'EOF'
-          cd /opt/wget_youtube_scraper
+          cd /opt/youtube_app
           
           # Check core service
           if systemctl is-active youtube-scraper >/dev/null 2>&1; then

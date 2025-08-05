@@ -44,7 +44,7 @@ services:
     restart: unless-stopped
     volumes:
       - vpn-data-ubuntu:/gluetun
-      - /opt/wget_youtube_scraper:/app  # Mount app directory
+      - /opt/youtube_app:/app  # Mount app directory
     working_dir: /app
     healthcheck:
       test: ["CMD", "/gluetun-entrypoint", "healthcheck"]
