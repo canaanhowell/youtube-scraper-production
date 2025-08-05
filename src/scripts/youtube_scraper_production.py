@@ -73,9 +73,9 @@ class YouTubeScraperProduction:
             start_time = datetime.utcnow()
             
             # Build YouTube search URL with last hour filter AND sort by upload date
-            # sp=CAISBAgCEAE = Sort by upload date + Last hour
+            # sp=CAISBAgBEAE%253D = Sort by upload date + Last hour (URL encoded)
             # sp=EgQIARAB = Last hour only (no sort)
-            search_url = f'https://www.youtube.com/results?search_query={keyword.replace(" ", "+")}&sp=CAISBAgCEAE'
+            search_url = f'https://www.youtube.com/results?search_query={keyword.replace(" ", "+")}&sp=CAISBAgBEAE%253D'
             logger.info(f"Search URL: {search_url}")
             
             # Choose scraping method based on pagination setting
