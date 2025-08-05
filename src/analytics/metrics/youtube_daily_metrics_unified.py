@@ -474,7 +474,9 @@ def main():
             'date_processed': args.date or str(datetime.now(timezone.utc).date() - timedelta(days=1)),
             'dry_run': args.dry_run
         }
-        calculator.db.collection('youtube_collection_logs').add(log_data)
+        # Create meaningful document ID for daily metrics log
+        doc_id = f"daily_metrics_{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H-%M-%S')}_UTC"
+        calculator.db.collection('youtube_collection_logs').document(doc_id).set(log_data)
 
 
 if __name__ == "__main__":

@@ -318,7 +318,9 @@ def main():
         'results': results
     }
     
-    collector.db.collection('youtube_collection_logs').add(log_data)
+    # Create meaningful document ID for interval metrics log
+    doc_id = f"interval_metrics_{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H-%M-%S')}_UTC"
+    collector.db.collection('youtube_collection_logs').document(doc_id).set(log_data)
     
     return results
 

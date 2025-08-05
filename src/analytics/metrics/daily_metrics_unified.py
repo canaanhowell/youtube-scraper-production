@@ -812,7 +812,9 @@ def main():
                     'dry_run': args.dry_run,
                     'version': '2.0'
                 }
-                calculator.db.collection('youtube_collection_logs').add(log_data)
+                # Create meaningful document ID for daily metrics log
+                doc_id = f"daily_metrics_{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H-%M-%S')}_UTC"
+                calculator.db.collection('youtube_collection_logs').document(doc_id).set(log_data)
             except Exception as e:
                 logger.warning(f"Failed to save run log: {e}")
     
