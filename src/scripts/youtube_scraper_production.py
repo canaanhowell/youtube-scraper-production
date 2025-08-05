@@ -297,8 +297,8 @@ class YouTubeScraperProduction:
         
         try:
             key = f"video:{video_id}"
-            # Store for 24 hours (86400 seconds) for better deduplication across longer runs
-            self.redis.setex(key, 86400, "1")
+            # Store for 2 hours (7200 seconds) for multi-instance 10-minute collections
+            self.redis.setex(key, 7200, "1")
         except Exception as e:
             logger.error(f"Error marking video: {e}")
     
