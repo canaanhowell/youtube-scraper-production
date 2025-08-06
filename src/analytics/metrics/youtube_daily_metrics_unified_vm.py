@@ -826,10 +826,18 @@ class YouTubeDailyMetricsUnified:
             for snapshot_doc in snapshots:
                 try:
                     data = snapshot_doc.to_dict()
-                    keywords_data = data.get('keywords', {})
+                    keywords_data = data.get('keywords', [])
+                    
+                    # Handle both old dict format and new array format
+                    if isinstance(keywords_data, dict):
+                        # Old format - convert to list of tuples
+                        keywords_list = keywords_data.items()
+                    else:
+                        # New array format - extract keyword name and data
+                        keywords_list = [(kw.get('keyword', ''), kw) for kw in keywords_data]
                     
                     # Process each keyword's daily data
-                    for keyword, kw_data in keywords_data.items():
+                    for keyword, kw_data in keywords_list:
                         kw_agg = keyword_aggregated_data[keyword]
                         
                         # Sum video counts (use latest for cumulative, sum for new videos)
