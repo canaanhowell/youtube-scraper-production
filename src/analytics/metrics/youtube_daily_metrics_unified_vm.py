@@ -516,12 +516,19 @@ class YouTubeDailyMetricsUnified:
                 total_momentum_score += metric.get('momentum_score', 50.0)
                 keyword_count += 1
             
-            # Sort keywords by video_count in descending order
-            keywords_data = dict(sorted(
+            # Sort keywords by video_count in descending order and convert to array
+            sorted_keywords = sorted(
                 keywords_data_unsorted.items(),
                 key=lambda x: x[1]['video_count'],
                 reverse=True
-            ))
+            )
+            
+            # Convert to array format with keyword name included
+            keywords_array = []
+            for keyword_name, keyword_data in sorted_keywords:
+                keyword_entry = {'keyword': keyword_name}
+                keyword_entry.update(keyword_data)
+                keywords_array.append(keyword_entry)
             
             # Calculate category-level standardized metrics
             avg_velocity_normalized = total_velocity_normalized / keyword_count if keyword_count > 0 else 0
@@ -537,7 +544,7 @@ class YouTubeDailyMetricsUnified:
                 'velocity': round(total_velocity_normalized, 1),  # Sum of keyword velocities (platform-normalized)
                 'acceleration': round(avg_acceleration, 2),  # Average of keyword accelerations
                 'total_views': total_views,
-                'keywords': keywords_data  # RENAMED from keywords_data
+                'keywords': keywords_array  # Now an array to preserve order
             }
             
             # Update appropriate time window subcollections
@@ -627,12 +634,19 @@ class YouTubeDailyMetricsUnified:
                 'total_views': metric.get('total_views', 0)
             }
         
-        # Sort keywords by video_count in descending order
-        keywords_data = dict(sorted(
+        # Sort keywords by video_count in descending order and convert to array
+        sorted_keywords = sorted(
             keywords_data_unsorted.items(),
             key=lambda x: x[1]['video_count'],
             reverse=True
-        ))
+        )
+        
+        # Convert to array format with keyword name included
+        keywords_array = []
+        for keyword_name, keyword_data in sorted_keywords:
+            keyword_entry = {'keyword': keyword_name}
+            keyword_entry.update(keyword_data)
+            keywords_array.append(keyword_entry)
         
         # Create snapshot data
         snapshot_data = {
@@ -643,7 +657,7 @@ class YouTubeDailyMetricsUnified:
             'velocity': round(total_velocity_normalized, 1),  # Sum of all keyword velocities
             'acceleration': round(avg_acceleration, 2),  # Average acceleration
             'total_views': total_views,
-            'keywords': keywords_data
+            'keywords': keywords_array  # Now an array to preserve order
         }
         
         # Update time window subcollections
