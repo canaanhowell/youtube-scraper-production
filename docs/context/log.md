@@ -38,7 +38,16 @@ The YouTube scraper is running with a new multi-instance architecture to handle 
 
 ### 🔧 **Latest Updates (2025-08-06)**:
 
-**🎯 Exact Phrase Matching Implementation - DEPLOYED** (Evening):
+**🎯 Category Time Windows Sorting - DEPLOYED** (Evening):
+- ✅ **Enhanced Data Organization**: Implemented video_count-based sorting for all YouTube category time windows
+- ✅ **Issue Addressed**: Category time window data was unsorted, making it difficult to identify top-performing keywords
+- ✅ **Solution**: Modified `youtube_daily_metrics_unified_vm.py` to sort keywords by `video_count` in descending order
+- ✅ **Scope**: All categories (ai_chatbots, ai_media_generation, automation, etc.) and all time windows (7_days, 30_days, 90_days)
+- ✅ **Implementation**: Dictionary-to-tuple conversion for sorting, maintaining 'all' aggregate at top
+- ✅ **Impact**: Easier identification of highest-activity keywords within each category and time window
+- ✅ **Effective**: Next daily metrics run (2:00 AM UTC) will apply sorting to all future aggregations
+
+**🎯 Exact Phrase Matching Implementation - DEPLOYED** (Earlier Evening):
 - ✅ **Enhanced Keyword Filtering**: Implemented exact phrase matching for multi-word keywords
 - ✅ **Issue Addressed**: Previous fuzzy matching allowed words in wrong order (e.g., "AI Character" matching "character ai")
 - ✅ **Solution**: Updated `_title_contains_keyword()` to require exact phrase matches with proper spacing

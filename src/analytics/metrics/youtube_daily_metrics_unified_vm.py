@@ -13,6 +13,7 @@ import math
 from datetime import datetime, timezone, timedelta
 import pytz
 from typing import Dict, Any, Optional
+from collections import defaultdict
 
 # Add project path
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -70,6 +71,7 @@ class YouTubeDailyMetricsUnified:
             'keywords_processed': 0,
             'keyword_metrics_created': 0,
             'category_snapshots_created': 0,
+            'category_main_docs_updated': 0,
             'errors': 0
         }
         
@@ -113,6 +115,10 @@ class YouTubeDailyMetricsUnified:
         if all_youtube_created:
             results['category_snapshots_created'] += all_youtube_created
         
+        # Update category main documents with aggregated data
+        main_docs_updated = self._update_category_main_documents(date)
+        results['category_main_docs_updated'] = main_docs_updated
+        
         # Clean up old snapshots
         self._cleanup_old_snapshots()
         
@@ -122,6 +128,7 @@ class YouTubeDailyMetricsUnified:
         logger.info(f"  Keywords processed: {results['keywords_processed']}")
         logger.info(f"  Keyword metrics created: {results['keyword_metrics_created']}")
         logger.info(f"  Category snapshots created: {results['category_snapshots_created']}")
+        logger.info(f"  Category main docs updated: {results['category_main_docs_updated']}")
         logger.info(f"  Errors: {results['errors']}")
         logger.info(f"{'='*60}")
         
@@ -489,14 +496,14 @@ class YouTubeDailyMetricsUnified:
             total_velocity_normalized = sum(m.get('velocity', 0) for m in keyword_metrics.values())
             
             # Prepare keyword-specific data with new standardized metrics
-            keywords_data = {}
+            keywords_data_unsorted = {}
             total_acceleration = 0
             total_momentum_score = 0
             keyword_count = 0
             
             for keyword, metric in keyword_metrics.items():
                 # New standardized format matching firestore_mapping.md
-                keywords_data[keyword] = {
+                keywords_data_unsorted[keyword] = {
                     'video_count': metric.get('video_count', 0),
                     'new_videos_in_day': metric.get('new_videos_in_day', 0),
                     'velocity': metric.get('velocity', 0),  # Platform-normalized percentage
@@ -508,6 +515,13 @@ class YouTubeDailyMetricsUnified:
                 total_acceleration += metric.get('acceleration', 1.0)
                 total_momentum_score += metric.get('momentum_score', 50.0)
                 keyword_count += 1
+            
+            # Sort keywords by video_count in descending order
+            keywords_data = dict(sorted(
+                keywords_data_unsorted.items(),
+                key=lambda x: x[1]['video_count'],
+                reverse=True
+            ))
             
             # Calculate category-level standardized metrics
             avg_velocity_normalized = total_velocity_normalized / keyword_count if keyword_count > 0 else 0
@@ -603,15 +617,22 @@ class YouTubeDailyMetricsUnified:
         avg_acceleration = total_acceleration / keyword_count if keyword_count > 0 else 1.0
         
         # Prepare keyword data
-        keywords_data = {}
+        keywords_data_unsorted = {}
         for keyword, metric in all_keywords_metrics.items():
-            keywords_data[keyword] = {
+            keywords_data_unsorted[keyword] = {
                 'video_count': metric.get('video_count', 0),
                 'new_videos_in_day': metric.get('new_videos_in_day', 0),
                 'velocity': metric.get('velocity', 0),
                 'acceleration': metric.get('acceleration', 1.0),
                 'total_views': metric.get('total_views', 0)
             }
+        
+        # Sort keywords by video_count in descending order
+        keywords_data = dict(sorted(
+            keywords_data_unsorted.items(),
+            key=lambda x: x[1]['video_count'],
+            reverse=True
+        ))
         
         # Create snapshot data
         snapshot_data = {
@@ -708,6 +729,181 @@ class YouTubeDailyMetricsUnified:
         
         if total_deleted > 0:
             logger.info(f"  Deleted {total_deleted} old snapshots")
+    
+    def _update_category_main_documents(self, date) -> int:
+        """Update category main documents with aggregated time window data from subcollections"""
+        logger.info(f"\nUpdating category main documents for {date}")
+        
+        TIME_WINDOWS = [7, 30, 90]
+        categories_updated = 0
+        
+        # Get all categories except all_youtube (which is handled separately)
+        categories_ref = self.db.collection('youtube_categories')
+        categories = categories_ref.stream()
+        
+        for category_doc in categories:
+            category = category_doc.id
+            
+            # Skip the aggregate category
+            if category == 'all_youtube':
+                continue
+            
+            try:
+                logger.info(f"  Updating main document for category: {category}")
+                update_data = {}
+                
+                # Aggregate data for each time window
+                for time_window in TIME_WINDOWS:
+                    aggregated_data = self._aggregate_subcollection_data(category, time_window, date)
+                    update_data[f'{time_window}_days'] = aggregated_data
+                
+                # Add metadata
+                update_data['last_updated'] = datetime.now(timezone.utc)
+                update_data['updated_by'] = 'youtube_daily_metrics_unified_vm'
+                
+                if not self.dry_run:
+                    doc_ref = self.db.collection('youtube_categories').document(category)
+                    doc_ref.update(update_data)
+                    categories_updated += 1
+                    logger.info(f"    ✅ Updated main document for {category}")
+                else:
+                    logger.info(f"    🔍 DRY RUN: Would update main document for {category}")
+                    categories_updated += 1
+                    
+            except Exception as e:
+                logger.error(f"    ❌ Error updating main document for {category}: {e}")
+        
+        logger.info(f"  Category main documents updated: {categories_updated}")
+        return categories_updated
+    
+    def _aggregate_subcollection_data(self, category: str, time_window: int, end_date) -> Dict[str, Dict[str, Any]]:
+        """Aggregate data from subcollection for a time window using efficient range queries."""
+        
+        subcoll_name = f'daily_snapshots_{time_window}d'
+        
+        # Calculate date range
+        start_date = end_date - timedelta(days=time_window-1)
+        start_date_str = start_date.strftime('%Y-%m-%d')
+        end_date_str = end_date.strftime('%Y-%m-%d')
+        
+        # Structure to collect keyword data across all days
+        keyword_aggregated_data = defaultdict(lambda: {
+            'video_count': 0,
+            'new_videos_in_day': 0,
+            'velocity': 0.0,
+            'acceleration': [],
+            'total_views': 0,
+            'daily_count': 0  # Track how many days this keyword had data
+        })
+        
+        try:
+            # Use a single range query instead of individual document fetches
+            snapshots_ref = (self.db.collection('youtube_categories')
+                            .document(category)
+                            .collection(subcoll_name)
+                            .where('date', '>=', start_date_str)
+                            .where('date', '<=', end_date_str)
+                            .order_by('date'))
+            
+            snapshots = list(snapshots_ref.stream())
+            logger.info(f"      Found {len(snapshots)} snapshots for {category} in {time_window}-day window")
+            
+            # Process each snapshot document
+            for snapshot_doc in snapshots:
+                try:
+                    data = snapshot_doc.to_dict()
+                    keywords_data = data.get('keywords', {})
+                    
+                    # Process each keyword's daily data
+                    for keyword, kw_data in keywords_data.items():
+                        kw_agg = keyword_aggregated_data[keyword]
+                        
+                        # Sum video counts (use latest for cumulative, sum for new videos)
+                        kw_agg['video_count'] = max(kw_agg['video_count'], kw_data.get('video_count', 0))
+                        kw_agg['new_videos_in_day'] += kw_data.get('new_videos_in_day', 0)
+                        kw_agg['total_views'] = max(kw_agg['total_views'], kw_data.get('total_views', 0))
+                        
+                        # Collect velocity and acceleration for averaging
+                        velocity = kw_data.get('velocity', 0)
+                        if velocity != 0:
+                            kw_agg['velocity'] += velocity
+                            kw_agg['daily_count'] += 1
+                        
+                        acceleration = kw_data.get('acceleration', 1.0)
+                        if acceleration != 1.0:  # Only include non-default accelerations
+                            kw_agg['acceleration'].append(acceleration)
+                            
+                except Exception as e:
+                    logger.warning(f"      Error processing snapshot {snapshot_doc.id}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"      Error querying snapshots for {category}/{time_window}d: {e}")
+            return {}
+        
+        # Calculate final aggregated metrics for each keyword
+        final_keyword_data = {}
+        all_aggregation = {
+            'video_count': 0,
+            'new_videos_in_day': 0,
+            'velocity': 0.0,
+            'acceleration': 1.0,
+            'total_views': 0
+        }
+        
+        for keyword, kw_agg in keyword_aggregated_data.items():
+            # Calculate averages
+            avg_velocity = kw_agg['velocity'] / kw_agg['daily_count'] if kw_agg['daily_count'] > 0 else 0.0
+            avg_acceleration = sum(kw_agg['acceleration']) / len(kw_agg['acceleration']) if kw_agg['acceleration'] else 1.0
+            
+            keyword_data = {
+                'video_count': kw_agg['video_count'],
+                'new_videos_in_day': kw_agg['new_videos_in_day'],
+                'velocity': avg_velocity,
+                'acceleration': avg_acceleration,
+                'total_views': kw_agg['total_views'],
+                'date_last_updated': datetime.now(timezone.utc)
+            }
+            
+            final_keyword_data[keyword] = keyword_data
+            
+            # Aggregate for "all" totals
+            all_aggregation['video_count'] += keyword_data['video_count']
+            all_aggregation['new_videos_in_day'] += keyword_data['new_videos_in_day']
+            all_aggregation['total_views'] += keyword_data['total_views']
+            all_aggregation['velocity'] += avg_velocity
+        
+        # Finalize "all" aggregation
+        if final_keyword_data:
+            all_aggregation['acceleration'] = sum(kd['acceleration'] for kd in final_keyword_data.values()) / len(final_keyword_data)
+        all_aggregation['date_last_updated'] = datetime.now(timezone.utc)
+        
+        # Add "all" to the final data
+        final_keyword_data['all'] = all_aggregation
+        
+        # Sort keywords by video_count in descending order (excluding 'all')
+        sorted_keyword_data = {'all': all_aggregation}  # Keep 'all' at the top
+        
+        # Sort other keywords by video_count descending
+        sorted_keywords = sorted(
+            [(k, v) for k, v in final_keyword_data.items() if k != 'all'],
+            key=lambda x: x[1]['video_count'],
+            reverse=True
+        )
+        
+        # Add sorted keywords to the result
+        for keyword, data in sorted_keywords:
+            sorted_keyword_data[keyword] = data
+        
+        logger.info(f"      Aggregated {len(final_keyword_data)-1} keywords for {time_window}-day window (sorted by video_count)")
+        
+        return sorted_keyword_data
+    
+    def _get_date_range(self, end_date, days: int):
+        """Get a list of dates for the time window."""
+        dates = []
+        for i in range(days):
+            dates.append(end_date - timedelta(days=i))
+        return sorted(dates)
     
     def calculate_date_range(self, start_date, end_date):
         """Calculate daily metrics for a range of dates"""

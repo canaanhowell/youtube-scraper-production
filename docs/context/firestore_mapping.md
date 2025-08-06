@@ -146,6 +146,9 @@ The `all_youtube` document is a special aggregate category that combines metrics
 | `keywords` | map | Per-keyword metrics | See structure below |
 
 **Keywords Map Structure** (`keywords.{keyword_name}`):
+
+**Note**: Keywords are automatically sorted by `video_count` in descending order within each time window (7_days_daily, 30_days_daily, 90_days_daily). The 'all' aggregate entry appears first, followed by individual keywords sorted by activity level.
+
 ```javascript
 {
   "video_count": 752,
@@ -423,6 +426,6 @@ trend_score_v2 = (0.6 * velocity_score) + (0.4 * momentum_score)
 
 ---
 
-*Document Version: 2.4 - Updated for exact phrase matching and 70+ keywords*
+*Document Version: 2.5 - Added category time window sorting by video_count*
 *Last Updated: 2025-08-06*
 *Created for: YouTube App Firestore Schema Documentation*

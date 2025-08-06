@@ -3,30 +3,29 @@
 ## Overview
 Enterprise-ready YouTube data collection app with automated deployment, VPN rotation, and comprehensive analytics.
 
-## Recent Updates (2025-08-05)
+## Recent Updates (2025-08-06)
 
-### 🔄 Production System Active
-- Successfully deployed with standardized v2.0 metrics system
-- Platform baseline simplified to hardcoded approach (150 videos/day)
+### 🔄 Production System Enhanced
+- **NEW**: Staggered cron schedule - instances run at :00, :03, :06 (reduces load)
+- **NEW**: Automated log cleanup system - removes logs older than 5 days
+- **FIXED**: Interval metrics logging now uses proper timestamp IDs
+- Multi-instance collection working smoothly with 16 keywords
 - All analytics pipelines operational on production VM
-- Auto-deployment fully configured and tested
 
 ### 🚀 Production Features
 - **Auto-Deployment**: Push to GitHub = automatic VM deployment
-- **Hourly Collection**: Cron job runs at :15 past each hour
+- **Staggered Collection**: 3 instances run every 10 minutes at :00/:03/:06
 - **Smart VPN Rotation**: 24 US Surfshark servers with health tracking
 - **Firebase Integration**: Real-time data storage and analytics
 - **Standardized Metrics v2.0**: Platform-normalized velocity scoring
 - **Title Filtering**: Strict keyword matching for improved data quality
 
-### 🔧 Latest Improvements (2025-08-05)
-- **NEW**: Simplified platform baseline system (hardcoded approach)
-- **Enhanced Metrics**: Platform-normalized velocity scoring operational
-- **Streamlined Management**: Manual baseline control via simple script
-- **Production Ready**: All systems deployed and verified on VM
-- **Documentation Updated**: All docs reflect current system architecture
-- Zero-downtime deployment verified
-- Enhanced analytics pipeline with v2.0 standardized metrics
+### 🔧 Latest Improvements
+- **Staggered Scheduling**: Instances spread across 6 minutes to reduce load
+- **Log Management**: Automated cleanup maintains database performance
+- **Better Logging**: All scripts now create consistent timestamp-based logs
+- **Resource Optimization**: Each VPN container gets dedicated time slot
+- **Documentation Updated**: All docs reflect current system state
 
 ## Quick Start
 

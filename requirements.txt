@@ -1,19 +1,19 @@
 # YouTube Scraper Production Dependencies
 
 # Firebase
-firebase-admin>=6.2.0
+firebase-admin>=6.5.0
 
 # Redis (native client for better performance)
-redis>=4.5.0
+redis>=5.1.0
 
 # HTTP requests
-requests>=2.31.0
+requests>=2.32.0
 
 # Environment management
-python-dotenv>=1.0.0
+python-dotenv>=1.0.1
 
 # Date/time handling
-pytz>=2023.3
+pytz>=2024.1
 
 # JSON handling (usually built-in)
 # json - built-in
@@ -32,28 +32,27 @@ pytz>=2023.3
 # typing - built-in
 
 # Analytics dependencies
-playwright>=1.40.0       # For enhanced scraping capabilities
-numpy>=1.24.0           # For numerical computations in metrics
-aiofiles>=23.0.0        # For async file operations
+playwright>=1.48.0       # For enhanced scraping capabilities
+numpy>=1.26.0           # For numerical computations in metrics
+aiofiles>=24.2.0        # For async file operations
 colorama>=0.4.6         # For colored console output
 
 # Enhanced DevOps Tool Dependencies
 # Monitoring and alerting
 psutil>=5.9.0           # System resource monitoring
-requests>=2.31.0        # HTTP requests for webhooks/APIs (already listed above)
 
 # Security scanning
-bandit>=1.7.5           # Python code security scanner
-safety>=2.3.0           # Dependency vulnerability scanner
-pip-audit>=2.6.0        # Alternative dependency scanner
+bandit>=1.7.7           # Python code security scanner
+safety>=3.2.0           # Dependency vulnerability scanner
+pip-audit>=2.7.0        # Alternative dependency scanner
 
 # Performance profiling
-memory-profiler>=0.61.0 # Memory usage profiling
-line-profiler>=4.1.0    # Line-by-line profiling
+memory-profiler>=0.62.0 # Memory usage profiling
+line-profiler>=4.1.3    # Line-by-line profiling
 
 # Load testing
-locust>=2.17.0          # Load testing framework
+locust>=2.31.0          # Load testing framework
 
 # Configuration and data processing
-pyyaml>=6.0.0           # YAML configuration files
-jsonschema>=4.19.0      # JSON schema validation
+pyyaml>=6.0.2           # YAML configuration files
+jsonschema>=4.23.0      # JSON schema validation

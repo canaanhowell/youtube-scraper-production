@@ -1,6 +1,7 @@
 #!/bin/bash
 # YouTube Multi-Instance Collection Wrapper
 # Runs 3 collection instances in parallel, then interval metrics
+# NOTE: This script is deprecated - use individual cron entries instead
 
 set -e
 
@@ -37,7 +38,7 @@ PID3=$!
 echo "Instance 3 started with PID $PID3" >> "$LOG_FILE"
 
 # Wait for all collectors to finish
-echo "Waiting for all instances to complete..." >> "$LOG_FILE"
+echo "All instances started. Waiting for completion..." >> "$LOG_FILE"
 wait $PID1
 STATUS1=$?
 wait $PID2

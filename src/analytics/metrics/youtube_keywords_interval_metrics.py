@@ -301,16 +301,22 @@ def main():
     # Calculate rolling metrics
     collector.calculate_rolling_metrics()
     
-    # Save collection log
+    # Save collection log using Firebase client's log_collection_run method
     log_data = {
-        'type': 'youtube_interval_metrics',
+        'run_type': 'interval_metrics',
+        'script_name': 'youtube_keywords_interval_metrics.py',
+        'keywords_processed': results['keywords_processed'],
+        'metrics_created': results['metrics_created'],
+        'errors': results['errors'],
+        'duration_seconds': results['duration_seconds'],
+        'success': results['errors'] == 0,
+        'session_id': f"interval_metrics_{int(time.time())}",
         'timestamp': datetime.now(timezone.utc),
         'results': results
     }
     
-    # Create meaningful document ID for interval metrics log
-    doc_id = f"interval_metrics_{datetime.now(timezone.utc).strftime('%Y-%m-%d_%H-%M-%S')}_UTC"
-    collector.db.collection('youtube_collection_logs').document(doc_id).set(log_data)
+    # Use Firebase client's log_collection_run method for consistent timestamp formatting
+    doc_id = collector.firebase_client.log_collection_run(log_data)
     
     return results
 

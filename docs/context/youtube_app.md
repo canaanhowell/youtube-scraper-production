@@ -151,6 +151,7 @@ youtube_app/
 ### 4. Category Aggregation
 - Groups keywords by AI category (chatbots, media generation, etc.)
 - Maintains 7, 30, 90-day, and all-time snapshots
+- **Keywords sorted by video_count descending** in all time windows for easy performance ranking
 - Tracks ecosystem-level trends
 - Auto-cleanup of old snapshots
 
@@ -884,4 +885,4 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ---
 
 *Last Updated: 2025-08-06*
-*Document Version: 2.7 - Added staggered cron schedule and log cleanup system*
+*Document Version: 2.8 - Added category time window sorting by video_count*

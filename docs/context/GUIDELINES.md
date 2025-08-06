@@ -2,7 +2,7 @@
 
 **Core principles for building production-ready, maintainable code that works with AI coding agents.**
 
-Last Updated: 2025-08-05
+Last Updated: 2025-08-06
 
 ---
 
