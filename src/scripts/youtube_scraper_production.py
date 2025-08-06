@@ -306,48 +306,35 @@ class YouTubeScraperProduction:
     
     def _title_contains_keyword(self, title: str, keyword: str) -> bool:
         """
-        Check if the title contains the keyword.
-        Handles multi-word keywords and special characters.
+        Check if the title contains the keyword as an exact phrase match.
+        Keywords must appear with exact spacing and word order.
+        
+        Examples:
+        - "character ai" must match "Character AI" exactly (case insensitive)
+        - "claude code" must match "Claude Code" exactly
+        - "machine learning" will NOT match "learning machine"
         
         Args:
             title: Video title
-            keyword: Search keyword (can be multi-word)
+            keyword: Search keyword (must be exact phrase)
             
         Returns:
-            bool: True if keyword is found in title
+            bool: True if exact keyword phrase is found in title
         """
         # Convert to lowercase for case-insensitive comparison
         title_lower = title.lower()
         keyword_lower = keyword.lower()
         
-        # First check if the entire keyword appears in the title
+        # Check for exact phrase match
         if keyword_lower in title_lower:
             return True
         
         # For multi-word keywords, also check hyphenated versions
-        # e.g., "machine learning" -> "machine-learning"
+        # e.g., "character ai" -> "character-ai"
         if ' ' in keyword_lower:
             hyphenated_keyword = keyword_lower.replace(' ', '-')
             if hyphenated_keyword in title_lower:
                 return True
-            
-            # Also check if all words appear in the title (not necessarily together)
-            # This helps with titles like "Learning Machine: AI Tutorial"
-            words = keyword_lower.split()
-            if len(words) > 1 and all(word in title_lower for word in words):
-                # All words present, check if they're reasonably close
-                # (within 3 words of each other)
-                first_word_pos = title_lower.find(words[0])
-                last_word_pos = title_lower.find(words[-1])
-                
-                if first_word_pos != -1 and last_word_pos != -1:
-                    # Count words between first and last keyword word
-                    substring = title_lower[first_word_pos:last_word_pos]
-                    word_count = len(substring.split())
-                    
-                    # If words are within 4 positions of each other, consider it a match
-                    if word_count <= len(words) + 3:
-                        return True
         
         return False
     
@@ -555,9 +542,16 @@ async def extract_videos_from_page(page, keyword):
                 if not title:
                     title = await link_element.inner_text()
                 
-                # Check title filtering
+                # Check title filtering - exact phrase match
                 if strict_filter == 'true':
-                    if keyword.lower() not in title.lower():
+                    title_lower = title.lower()
+                    keyword_lower = keyword.lower()
+                    
+                    # Check exact phrase or hyphenated version
+                    exact_match = (keyword_lower in title_lower or 
+                                 ((' ' in keyword_lower) and keyword_lower.replace(' ', '-') in title_lower))
+                    
+                    if not exact_match:
                         videos.append({{'id': video_id, 'filtered': True}})
                         continue
                 
