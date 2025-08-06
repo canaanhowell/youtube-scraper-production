@@ -5,9 +5,10 @@
 The YouTube App is a production-ready data collection and analytics system that continuously monitors YouTube for trending AI-related videos. It provides automated keyword-based video discovery, hourly trend analysis, and aggregated metrics for tracking the AI ecosystem's evolution on YouTube.
 
 **Key Value Propositions:**
-- Automated discovery of AI-related videos across 15+ keywords
+- Automated discovery of AI-related videos across 70+ active keywords
 - VPN-based collection with 24 US server rotation for reliability
-- Title filtering for high-quality, relevant video collection
+- Exact phrase matching for precise keyword filtering (e.g., "character ai" must appear exactly)
+- Multi-instance parallel collection with staggered scheduling
 - Real-time trend analysis with velocity and acceleration metrics
 - Category-level aggregations for ecosystem insights
 - Enterprise-grade architecture with 100x scale design
@@ -125,11 +126,13 @@ youtube_app/
 ## Core Functionality
 
 ### 1. Video Discovery
-- Searches YouTube for 15+ AI-related keywords hourly
+- Searches YouTube for 70+ AI-related keywords every 10 minutes (staggered across 3 instances)
 - Collects video metadata: title, views, channel, duration
-- Optional title filtering (YOUTUBE_STRICT_TITLE_FILTER=true)
-- Deduplication using Redis (24-hour cache)
-- VPN rotation for reliable access
+- Exact phrase matching title filtering (YOUTUBE_STRICT_TITLE_FILTER=true)
+  - Multi-word keywords like "character ai" must appear exactly as "Character AI" or "character-ai"
+  - Eliminates false matches where words appear in wrong order
+- Instance-specific Redis deduplication (24-hour cache with namespacing)
+- VPN rotation for reliable access across 3 parallel containers
 
 ### 2. Interval Metrics (Hourly, immediately after scraper)
 - Runs automatically after each video collection
@@ -483,12 +486,14 @@ youtube_categories/* (ecosystem insights)
 | Daily Metrics | Cron | Daily at 2:00 AM | daily_metrics, snapshots |
 
 ### Active Services:
-- **Multi-Instance Collection**: Every 10 minutes (cron) - `/opt/youtube_app/deployment/cron_scraper_multi.sh`
-  - Instance 1: youtube-vpn-1 container, dynamic keyword distribution
-  - Instance 2: youtube-vpn-2 container, dynamic keyword distribution  
-  - Instance 3: youtube-vpn-3 container, dynamic keyword distribution
-- **Interval Metrics**: Runs after all instances complete
+- **Multi-Instance Collection**: Staggered schedule every 10 minutes (individual cron entries)
+  - Instance 1: Runs at :00, :10, :20, :30, :40, :50 (youtube-vpn-1)
+  - Instance 2: Runs at :03, :13, :23, :33, :43, :53 (youtube-vpn-2)  
+  - Instance 3: Runs at :06, :16, :26, :36, :46, :56 (youtube-vpn-3)
+  - Dynamic keyword distribution across instances
+- **Interval Metrics**: Runs at :09, :19, :29, :39, :49, :59 (after all instances)
 - **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/cron_daily_metrics.sh`
+- **Weekly Log Cleanup**: Sundays at 3 AM UTC - removes logs older than 5 days
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
 ## VPN System
@@ -554,12 +559,15 @@ bash deployment/scripts/run_daily_metrics_now.sh
 ## Performance & Scaling
 
 ### Current Performance Metrics
-- **Active Keywords**: 16 (synced with reddit_keywords baseline) - can scale to 40+
-- **Videos per Keyword**: 500-1000 average
-- **Collection Time**: <10 minutes even with 40+ keywords (multi-instance)
+- **Active Keywords**: 70 keywords (expanded from original 16-keyword baseline)
+- **Videos per Collection**: 10-20 new videos per keyword for popular keywords (e.g., ChatGPT, Claude)
+- **Collection Time per Instance**: ~75 seconds (processing 24 keywords each across 3 instances)
+- **Total Collection Time**: <2 minutes for all 70 keywords across 3 staggered instances
 - **Interval Metrics**: ~5 seconds for all keywords
-- **Daily Metrics**: ~3 seconds for aggregation
+- **Daily Metrics**: ~37 seconds for aggregation (8x faster with range query optimization)
 - **VPN Containers**: 3 parallel containers (youtube-vpn-1, youtube-vpn-2, youtube-vpn-3)
+- **Redis Deduplication**: Instance-specific namespacing (instance_N:video:ID) prevents false duplicates
+- **Exact Phrase Filtering**: Improves data quality by eliminating irrelevant matches
 
 ### Scaling Limits
 - **Keywords**: Designed for 100+ keywords
@@ -574,6 +582,7 @@ bash deployment/scripts/run_daily_metrics_now.sh
 3. **Batch Processing**: Efficient keyword processing
 4. **Async Operations**: Non-blocking I/O
 5. **Efficient Queries**: Optimized Firestore queries
+6. **Range Query Optimization (2025-08-06)**: Daily metrics aggregation now uses Firebase range queries instead of individual document fetches (8x performance improvement from 5+ minutes to 37 seconds)
 
 ## Security & Access
 
@@ -647,12 +656,42 @@ f = FirebaseClient(); print('Connected' if f.db else 'Failed')"
 grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ```
 
+## Recent Changes (August 6, 2025)
+
+### Staggered Cron Schedule Implementation
+- **Status**: ✅ Completed and Active
+- **Issue**: All 3 instances were starting simultaneously, causing resource spikes
+- **Solution**: Implemented individual cron entries with staggered timing
+- **Schedule**:
+  - Instance 1: :00, :10, :20, :30, :40, :50
+  - Instance 2: :03, :13, :23, :33, :43, :53 (3-minute offset)
+  - Instance 3: :06, :16, :26, :36, :46, :56 (6-minute offset)
+  - Interval Metrics: :09, :19, :29, :39, :49, :59
+- **Benefits**: Spreads load across 6+ minutes, reduces resource contention
+
+### Log Cleanup System
+- **Status**: ✅ Completed
+- **Feature**: Automated cleanup of collection logs older than 5 days
+- **Components**:
+  - `cleanup_old_collection_logs.py` - Interactive cleanup with confirmation
+  - `cleanup_old_logs_auto.py` - Automated cleanup for cron
+  - Weekly cron job: Sundays at 3 AM UTC
+- **Impact**: Maintains database performance by removing old logs
+
+### Interval Metrics Logging Fix
+- **Status**: ✅ Completed
+- **Issue**: Interval metrics script was creating hash IDs in collection logs
+- **Solution**: Updated to use Firebase client's `log_collection_run` method
+- **Result**: All logs now use consistent timestamp-based IDs
+
 ## Recent Changes (August 5, 2025)
 
 ### Multi-Instance Collection System Implementation
-- **Status**: ✅ Completed and Active
-- **Issue**: Keyword count increased (was 42 at peak), causing collection to exceed 10-minute cron interval
-- **Root Cause**: Multiple collection instances overlapping and fighting over single VPN container
+- **Status**: ✅ Completed and Working Properly
+- **Initial Issue**: Keyword count increased (was 42 at peak), causing collection to exceed 10-minute cron interval
+- **Root Causes Identified**: 
+  1. Multiple collection instances overlapping and fighting over single VPN container
+  2. Shared Redis cache causing false duplicate detection between parallel instances
 - **Solution Implemented**:
   - Created docker-compose-multi.yml with 3 VPN containers (ports 8000, 8003, 8004)
   - Built youtube_collection_manager_simple.py for simpler VPN handling
@@ -660,13 +699,15 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
   - Process locking prevents overlapping runs of same instance
   - Fixed Firebase logging format with proper keywords_processed array and videos_per_keyword map
   - Added update_keyword_timestamp method to FirebaseClient
+  - **Critical Fix**: Added instance-specific Redis key namespacing (`instance_N:video:ID`)
 - **Files Created/Modified**:
   - `/workspace/youtube_app/docker-compose-multi.yml`
   - `/workspace/youtube_app/src/scripts/youtube_collection_manager_simple.py`
   - `/workspace/youtube_app/src/utils/firebase_client_enhanced.py`
   - `/workspace/youtube_app/deployment/youtube_collector_[1-3].sh`
   - `/workspace/youtube_app/deployment/cron_scraper_multi.sh`
-- **Impact**: System can now handle 40+ keywords without collection overlaps
+  - `/workspace/youtube_app/src/scripts/youtube_scraper_production.py` (Redis namespacing)
+- **Impact**: System now collects proper video counts (ChatGPT: 20 videos vs previous 5) and can handle 40+ keywords without overlaps
 
 ## Recent Changes (August 5, 2025)
 
@@ -842,5 +883,5 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ---
 
-*Last Updated: 2025-08-05*
-*Document Version: 2.6 - Added collection logs hash ID fix documentation*
+*Last Updated: 2025-08-06*
+*Document Version: 2.7 - Added staggered cron schedule and log cleanup system*

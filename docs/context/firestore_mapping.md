@@ -11,6 +11,7 @@ The YouTube app uses Firebase Firestore as its primary database with the followi
 - `youtube_videos` - Raw video data organized by keyword
 - `youtube_categories` - Category-level aggregated metrics
 - `youtube_collection_logs` - Audit trail for collection runs
+- `youtube_maintenance_logs` - **NEW**: Maintenance operations log (cleanup, etc.)
 - `platform_metrics` - **NEW v2.0**: Platform baselines for velocity normalization
 
 ## Collection Details
@@ -304,7 +305,35 @@ youtube_daily_metrics_unified_vm.py
   - ~144 interval metrics per keyword per day (every 10 minutes)
   - ~365 daily metrics per keyword per year
 
-### 7. platform_metrics (NEW v2.0)
+### 7. youtube_maintenance_logs (NEW)
+
+**Purpose**: Tracks maintenance operations like log cleanup and system health
+
+**Document ID**: `{operation}_{timestamp}_UTC` (e.g., "cleanup_2025-08-06_03-00-00_UTC")
+
+**Fields**:
+| Field Name | Type | Description | Example |
+|------------|------|-------------|---------|
+| `type` | string | Type of maintenance operation | "maintenance_cleanup" |
+| `timestamp` | timestamp | When operation occurred | 2025-08-06T03:00:00Z |
+| `stats` | map | Operation statistics | See below |
+| `days_kept` | number | For cleanup: retention period | 5 |
+
+**Stats Object for Cleanup**:
+```json
+{
+  "total_docs": 254,
+  "old_docs": 50,
+  "recent_docs": 204,
+  "deleted": 50,
+  "delete_errors": 0,
+  "oldest_removed": "2025-07-30T00:00:00Z",
+  "newest_removed": "2025-07-31T23:59:59Z",
+  "space_freed_estimate_mb": 2.5
+}
+```
+
+### 8. platform_metrics (NEW v2.0)
 
 **Purpose**: Stores hardcoded platform-wide baseline metrics for velocity normalization
 
@@ -385,8 +414,8 @@ trend_score_v2 = (0.6 * velocity_score) + (0.4 * momentum_score)
   - platform_metrics: Single document per platform
 
 - **Size Estimates**:
-  - 16 active keywords (synced with reddit_keywords) - can scale to 40+
-  - ~500-1000 videos per keyword
+  - 70+ active keywords (expanded from original 16 baseline) - can scale to 100+
+  - ~500-1000 videos per keyword (higher quality with exact phrase matching)
   - ~144 interval metrics per keyword per day (every 10 minutes)
   - ~365 daily metrics per keyword per year
   - 1 platform baseline document (hardcoded, updated manually)
@@ -394,6 +423,6 @@ trend_score_v2 = (0.6 * velocity_score) + (0.4 * momentum_score)
 
 ---
 
-*Document Version: 2.2 - Updated for current system architecture*
-*Last Updated: 2025-08-05*
+*Document Version: 2.4 - Updated for exact phrase matching and 70+ keywords*
+*Last Updated: 2025-08-06*
 *Created for: YouTube App Firestore Schema Documentation*

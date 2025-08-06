@@ -18,7 +18,7 @@ You have 2 rules:
 - **Location**: `/opt/youtube_app` on VM
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
-## Current Status (2025-08-05)
+## Current Status (2025-08-06)
 
 ### 🚀 **Multi-Instance Collection System Active**
 
@@ -27,18 +27,66 @@ The YouTube scraper is running with a new multi-instance architecture to handle 
 ✅ **System Status**:
 - **VM**: Running at 134.199.201.56 - 4 vCPU, 8GB RAM
 - **Project Path**: `/opt/youtube_app/`
-- **VPN System**: 3 parallel VPN containers (youtube-vpn-1, youtube-vpn-2, youtube-vpn-3)
+- **VPN System**: 3 VPN containers (youtube-vpn-1, youtube-vpn-2, youtube-vpn-3) with staggered access
 - **Collection**: 3 instances processing keywords in parallel
 - **Firebase**: Connected with proper logging format
 - **Redis**: Upstash Redis REST API configured
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
 - **Analytics Pipeline**: Fully operational with interval and daily metrics
 - **Collection Method**: wget-based (20 videos per keyword)
-- **Collection Schedule**: Every 10 minutes via cron (multi-instance)
+- **Collection Schedule**: Every 10 minutes via cron (staggered multi-instance)
 
-### 🔧 **Latest Updates (2025-08-05 Evening)**:
+### 🔧 **Latest Updates (2025-08-06)**:
 
-**🎯 Multi-Instance Collection System**:
+**🎯 Exact Phrase Matching Implementation - DEPLOYED** (Evening):
+- ✅ **Enhanced Keyword Filtering**: Implemented exact phrase matching for multi-word keywords
+- ✅ **Issue Addressed**: Previous fuzzy matching allowed words in wrong order (e.g., "AI Character" matching "character ai")
+- ✅ **Solution**: Updated `_title_contains_keyword()` to require exact phrase matches with proper spacing
+- ✅ **Examples**: "character ai" must appear as "Character AI" or "character-ai" (hyphenated variant supported)
+- ✅ **Impact**: Eliminates false matches where keyword words appear separately or in wrong order
+- ✅ **Configuration**: YOUTUBE_STRICT_TITLE_FILTER=true enabled for exact phrase filtering
+- ✅ **Code Updated**: Both wget and Playwright filtering methods use consistent exact matching logic
+- ✅ **Deployed**: Active in production, will improve data quality for multi-word keywords
+
+**🎯 Daily Metrics Performance Optimization - DEPLOYED** (Earlier):
+- ✅ **8x Performance Improvement**: Optimized `youtube_daily_metrics_unified_vm.py` with range queries
+- ✅ **Issue Fixed**: Category aggregations only showing single keywords (e.g., only `qwen3` in ai_coding_agents)
+- ✅ **Root Cause**: Individual Firebase document queries (90+ queries per category) causing slowness and incomplete data
+- ✅ **Solution**: Replaced with efficient range queries using Firebase `where` clauses for date ranges
+- ✅ **Before**: ~5+ minutes runtime with 1,270+ individual queries
+- ✅ **After**: ~37 seconds runtime with efficient batch queries per category
+- ✅ **Impact**: All keywords now properly appear in category time window aggregations (30_days, 90_days)
+- ✅ **Deployed**: Optimized script deployed to VM at `/opt/youtube_app/src/analytics/metrics/`
+- ✅ **Verified**: Script tested and working on production VM, ready for next 2:00 AM run
+- ✅ **Keywords Fixed**: ai_coding_agents now shows all 7 keywords (claude code, codex, cursor, github copilot, qwen3, testsprite 20, windsurf)
+- ✅ **All Categories**: Fix applies to all categories system-wide, not just coding agents
+
+**🎯 Staggered Cron Schedule Implemented**:
+- ✅ Replaced simultaneous instance starts with staggered cron entries
+- ✅ Instance 1: Runs at :00, :10, :20, :30, :40, :50
+- ✅ Instance 2: Runs at :03, :13, :23, :33, :43, :53 (3-minute offset)
+- ✅ Instance 3: Runs at :06, :16, :26, :36, :46, :56 (6-minute offset)
+- ✅ Interval metrics: Runs at :09, :19, :29, :39, :49, :59 (after all complete)
+- ✅ Reduces server load by spreading instances across 6 minutes
+- ✅ Each instance gets dedicated time without resource competition
+
+**🎯 Log Cleanup System Added**:
+- ✅ Created automated cleanup for collection logs older than 5 days
+- ✅ Interactive script: `cleanup_old_collection_logs.py` for manual cleanup
+- ✅ Automated script: `cleanup_old_logs_auto.py` for cron jobs
+- ✅ Weekly cleanup cron: Sundays at 3 AM UTC
+- ✅ Maintains database performance by removing old logs
+- ✅ Logs cleanup statistics to `youtube_maintenance_logs` collection
+
+**🎯 Interval Metrics Logging Fix**:
+- ✅ Fixed interval metrics creating hash IDs in collection logs
+- ✅ Updated to use Firebase client's `log_collection_run` method
+- ✅ Ensures consistent timestamp-based document IDs
+- ✅ Cleaned up 24 hash documents from interval metrics
+
+### 🔧 **Previous Updates (2025-08-05 Evening)**:
+
+**🎯 Multi-Instance Collection System - WORKING**:
 - ✅ Implemented 3-instance parallel collection to handle keyword scaling
 - ✅ Created docker-compose-multi.yml with 3 VPN containers (ports 8000, 8003, 8004)
 - ✅ Dynamic keyword distribution across instances (currently 5-5-6 split for 16 keywords)
@@ -46,13 +94,16 @@ The YouTube scraper is running with a new multi-instance architecture to handle 
 - ✅ Process locking prevents overlapping runs of same instance
 - ✅ Fixed Firebase logging format with proper keywords_processed array and videos_per_keyword map
 - ✅ Added update_keyword_timestamp method to FirebaseClient
-- ✅ System can now handle 40+ keywords without collection overlaps
+- ✅ **CRITICAL FIX**: Added instance-specific Redis key namespacing to prevent duplicate detection between parallel instances
+- ✅ System now collecting proper video counts (ChatGPT: 20 videos vs previous 5)
+- ✅ Ready to scale to 40+ keywords without collection overlaps
 
 **🎯 Collection Issue Resolution**:
-- **Problem**: Keywords increased causing collections to take >10 minutes
-- **Root Cause**: Multiple instances overlapping and fighting over single VPN container
-- **Solution**: 3 parallel instances with dedicated VPN containers
-- **Result**: Collections complete in <10 minutes even with 40+ keywords
+- **Initial Problem**: Keywords increased causing collections to take >10 minutes
+- **Root Cause 1**: Multiple instances overlapping and fighting over single VPN container
+- **Root Cause 2**: Shared Redis cache causing false duplicates between parallel instances
+- **Solution**: 3 parallel instances with dedicated VPN containers + instance-specific Redis namespacing
+- **Result**: Each instance collects proper video counts, system ready for large-scale keyword growth
 
 ### 🔧 **Earlier Updates (2025-08-05)**:
 
@@ -327,14 +378,14 @@ When implementing any collection system changes, verify ALL of the following:
 2. **VPN Connected**: Verify VPN containers are healthy
    ```bash
    docker ps | grep youtube-vpn
-   # ✓ Should show "healthy" status
+   # ✓ Should show "healthy" status for all 3 containers
    ```
 
 3. **Videos Actually Collected**: Check Firebase for actual video data
    ```bash
    # Check collection logs in Firebase
-   # ✓ total_videos_collected should be > 0
-   # ✓ videos_per_keyword should show counts > 0 for active keywords
+   # ✓ total_videos_collected should be > 0 (target: 40+ videos per run)
+   # ✓ videos_per_keyword should show 15-20 for active keywords like ChatGPT, Claude
    ```
 
 4. **No wget Errors**: Verify wget is successfully fetching pages
@@ -349,7 +400,13 @@ When implementing any collection system changes, verify ALL of the following:
    # ✓ Should see new video documents with recent timestamps
    ```
 
-**⚠️ NEVER declare success without verifying actual data collection!**
+6. **Redis Deduplication Working**: Verify instances aren't interfering
+   ```bash
+   # Each instance should show proper video counts, not excessive duplicates
+   # ✓ Instance logs should show reasonable duplicate ratios (not 90%+ duplicates)
+   ```
+
+**⚠️ NEVER declare success without verifying actual data collection AND proper video counts!**
 
 ### 📝 **Required Environment Variables**
 The `.env` file on VM must include:
@@ -431,18 +488,20 @@ The wget YouTube scraper is now:
 - ✅ Ready for production data collection
 - ✅ Running hourly via cron job at :15 past each hour
 - ✅ Analytics pipeline operational (interval metrics run immediately after scraper)
-- ✅ Daily metrics calculating at 2:00 AM daily with **standardized v2.0 metrics**
+- ✅ Daily metrics calculating at 2:00 AM daily with **standardized v2.0 metrics** and **8x performance optimization**
 - ✅ Platform baseline calculator for velocity normalization
 - ✅ Cross-platform comparable metrics system
 - ✅ All systemd services configured and active
 
 ### Active Services:
-- **Multi-Instance Collection**: Every 10 minutes (cron) - `/opt/youtube_app/deployment/cron_scraper_multi.sh`
-  - Instance 1: youtube-vpn-1 container, processes keywords 1-5
-  - Instance 2: youtube-vpn-2 container, processes keywords 6-10  
-  - Instance 3: youtube-vpn-3 container, processes keywords 11-16
-- **Interval Metrics**: Runs after all instances complete
-- **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/cron_daily_metrics.sh`
+- **Multi-Instance Collection**: Staggered schedule every 10 minutes (individual cron entries)
+  - Instance 1: Runs at :00 (youtube-vpn-1 container)
+  - Instance 2: Runs at :03 (youtube-vpn-2 container)  
+  - Instance 3: Runs at :06 (youtube-vpn-3 container)
+  - Dynamic keyword distribution across instances
+- **Interval Metrics**: Runs at :09 (after all instances complete)
+- **Daily Metrics v2.0**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/cron_daily_metrics.sh` - **OPTIMIZED: 8x faster with range queries**
+- **Weekly Log Cleanup**: Sundays at 3 AM UTC - removes logs >5 days old
 - **Platform Baseline**: Hardcoded at 150.0 videos/day (managed via `src/analytics/metrics/set_platform_baseline.py`)
 - **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
 
