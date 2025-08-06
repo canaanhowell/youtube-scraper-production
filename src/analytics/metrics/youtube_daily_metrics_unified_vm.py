@@ -569,7 +569,7 @@ class YouTubeDailyMetricsUnified:
                     else:
                         logger.info(f"    [DRY RUN] Would update {subcollection_name}/{str(date)}")
             
-            logger.info(f"    Keywords: {', '.join(keywords_data.keys())}")
+            logger.info(f"    Keywords: {', '.join([kw['keyword'] for kw in keywords_array])}")
             logger.info(f"    Total videos: {total_videos}")
             logger.info(f"    Total views: {total_views:,}")
             logger.info(f"    Videos added: {total_new_videos}")
