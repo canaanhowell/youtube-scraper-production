@@ -48,10 +48,5 @@ STATUS3=$?
 
 echo "Collection instances completed with statuses: $STATUS1, $STATUS2, $STATUS3" >> "$LOG_FILE"
 
-# Run interval metrics after collection
-echo "Running interval metrics calculation..." >> "$LOG_FILE"
-source venv/bin/activate
-python src/analytics/metrics/youtube_keywords_interval_metrics.py >> "$LOG_FILE" 2>&1
-
 echo "Multi-instance collection completed at $(date)" >> "$LOG_FILE"
 echo "" >> "$LOG_FILE"

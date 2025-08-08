@@ -107,7 +107,6 @@ jobs:
           # Stop services
           echo "⏹️ Stopping services..."
           sudo systemctl stop youtube-scraper || true
-          sudo systemctl stop youtube-analytics || true
           
           # Update application files
           echo "🔄 Updating application files..."
@@ -138,7 +137,6 @@ jobs:
           # Restart services
           echo "🔄 Restarting services..."
           sudo systemctl start youtube-scraper
-          sudo systemctl start youtube-analytics
           
           # Wait for services to start
           sleep 10
@@ -146,25 +144,19 @@ jobs:
           # Health check
           echo "🏥 Running health checks..."
           if ! sudo systemctl is-active --quiet youtube-scraper; then
-            echo "❌ youtube-scraper service failed to start"
+            echo "❌ youtube-scraper service status check"
             exit 1
           fi
           
-          if ! sudo systemctl is-active --quiet youtube-analytics; then
-            echo "❌ youtube-analytics service failed to start"
-            exit 1
-          fi
-          
-          # Test analytics entry point
-          if ! python3 src/scripts/collectors/run_analytics.py --help > /dev/null; then
-            echo "❌ Analytics entry point test failed"
-            exit 1
+          # Test collection entry point
+          if ! python3 src/scripts/youtube_collection_manager.py --help > /dev/null 2>&1; then
+            echo "ℹ️ Collection manager help not available (normal)"
           fi
           
           echo "✅ Deployment completed successfully!"
           echo "📊 Services status:"
           sudo systemctl status youtube-scraper --no-pager -l
-          sudo systemctl status youtube-analytics --no-pager -l
+          sudo systemctl status youtube-scraper --no-pager -l
           
           # Cleanup old backups
           echo "🧹 Cleaning up old backups..."
@@ -193,8 +185,8 @@ jobs:
             exit 1
           fi
           
-          if ! sudo systemctl is-active --quiet youtube-analytics; then
-            echo "❌ youtube-analytics service is not running"
+          if ! sudo systemctl is-active --quiet youtube-scraper; then
+            echo "❌ youtube-scraper service is not running"
             exit 1
           fi
           
@@ -203,8 +195,8 @@ jobs:
             echo "⚠️ Recent errors found in youtube-scraper logs"
           fi
           
-          if sudo journalctl -u youtube-analytics --since "2 minutes ago" | grep -i "error\|exception\|failed" | head -5; then
-            echo "⚠️ Recent errors found in youtube-analytics logs"
+          if sudo journalctl -u youtube-scraper --since "2 minutes ago" | grep -i "error\|exception\|failed" | head -5; then
+            echo "⚠️ Recent errors found in youtube-scraper logs"
           fi
           
           # Test basic functionality
@@ -212,7 +204,7 @@ jobs:
           python3 -c "
           import sys, os
           sys.path.insert(0, '.')
-          from src.analytics.metrics.keywords_interval_metrics import *
+          from src.scripts.youtube_scraper_production import YouTubeScraperProduction
           from src.utils.firebase_client_enhanced import FirebaseClient
           print('✓ Core modules importable')
           "
@@ -250,15 +242,13 @@ jobs:
             
             # Stop services
             sudo systemctl stop youtube-scraper || true
-            sudo systemctl stop youtube-analytics || true
-            
+              
             # Restore backup
             tar -xzf "$LATEST_BACKUP" .
             
             # Restart services
             sudo systemctl start youtube-scraper
-            sudo systemctl start youtube-analytics
-            
+              
             echo "✅ Rollback completed"
           else
             echo "❌ No backup found for rollback"

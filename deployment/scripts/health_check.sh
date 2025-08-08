@@ -8,7 +8,7 @@ set -e
 # Configuration
 DEPLOYMENT_PATH="/opt/youtube_app"
 LOG_FILE="$DEPLOYMENT_PATH/logs/health_check.log"
-SERVICES=("youtube-scraper" "youtube-analytics")
+SERVICES=("youtube-scraper")
 CRITICAL_PROCESSES=("python3")
 
 # Colors for output
@@ -139,23 +139,12 @@ check_application() {
 import sys, os
 sys.path.insert(0, '.')
 try:
-    from src.analytics.metrics.keywords_interval_metrics import *
-    print('✓ Interval metrics import OK')
+    from src.scripts.youtube_scraper_production import YouTubeScraperProduction
+    print('✓ YouTube scraper import OK')
 except Exception as e:
-    print(f'✗ Interval metrics import failed: {e}')
+    print(f'✗ YouTube scraper import failed: {e}')
     exit(1)
-" && check_result "Interval Metrics Import" 0 "Success" || check_result "Interval Metrics Import" 1 "Failed"
-    
-    python3 -c "
-import sys, os
-sys.path.insert(0, '.')
-try:
-    from src.analytics.aggregators.category_metrics_aggregator import *
-    print('✓ Category aggregator import OK')
-except Exception as e:
-    print(f'✗ Category aggregator import failed: {e}')
-    exit(1)
-" && check_result "Category Aggregator Import" 0 "Success" || check_result "Category Aggregator Import" 1 "Failed"
+" && check_result "YouTube Scraper Import" 0 "Success" || check_result "YouTube Scraper Import" 1 "Failed"
     
     python3 -c "
 import sys, os
@@ -168,10 +157,10 @@ except Exception as e:
     exit(1)
 " && check_result "Firebase Client Import" 0 "Success" || check_result "Firebase Client Import" 1 "Failed"
     
-    # Test analytics entry point
-    python3 src/scripts/collectors/run_analytics.py --help > /dev/null 2>&1 && \
-        check_result "Analytics Entry Point" 0 "Accessible" || \
-        check_result "Analytics Entry Point" 1 "Not accessible"
+    # Test collection manager entry point
+    python3 src/scripts/youtube_collection_manager.py --help > /dev/null 2>&1 && \
+        check_result "Collection Manager Entry Point" 0 "Accessible" || \
+        check_result "Collection Manager Entry Point" 1 "Not accessible"
 }
 
 # Check external dependencies

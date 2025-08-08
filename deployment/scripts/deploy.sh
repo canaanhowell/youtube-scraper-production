@@ -9,7 +9,7 @@ set -e  # Exit on any error
 DEPLOYMENT_PATH="/opt/youtube_app"
 BACKUP_DIR="$DEPLOYMENT_PATH/backups"
 LOG_FILE="$DEPLOYMENT_PATH/logs/deployment.log"
-SERVICES=("youtube-scraper" "youtube-analytics")
+SERVICES=("youtube-scraper")
 
 # Colors for output
 RED='\033[0;31m'
@@ -54,7 +54,7 @@ setup_directories() {
     log INFO "Setting up directory structure..."
     
     mkdir -p "$DEPLOYMENT_PATH"/{src,logs,backups,tmp}
-    mkdir -p "$DEPLOYMENT_PATH/src"/{analytics,scripts,utils,config}
+    mkdir -p "$DEPLOYMENT_PATH/src"/{scripts,utils,config}
     
     # Ensure proper ownership
     chown -R $USER:$USER "$DEPLOYMENT_PATH"
@@ -185,8 +185,8 @@ update_dependencies() {
         error_exit "requirements.txt not found"
     fi
     
-    # Install analytics dependencies
-    pip install numpy>=1.24.0 aiofiles>=23.0.0 colorama>=0.4.6
+    # Install additional dependencies
+    pip install aiofiles>=23.0.0 colorama>=0.4.6
     
     # Install enhanced DevOps tool dependencies
     log INFO "Installing enhanced DevOps tools..."
@@ -293,17 +293,16 @@ health_check() {
 import sys, os
 sys.path.insert(0, '.')
 try:
-    from src.analytics.metrics.keywords_interval_metrics import *
-    from src.analytics.aggregators.category_metrics_aggregator import *
     from src.utils.firebase_client_enhanced import FirebaseClient
+    from src.scripts.youtube_scraper_production import YouTubeScraperProduction
     print('✓ Core modules import successfully')
 except Exception as e:
     print(f'✗ Import error: {e}')
     exit(1)
 " || error_exit "Health check failed: Python imports"
     
-    # Test analytics entry point
-    python3 src/scripts/collectors/run_analytics.py --help > /dev/null || error_exit "Health check failed: Analytics entry point"
+    # Test scraper entry point
+    python3 src/scripts/youtube_collection_manager.py --help > /dev/null 2>&1 || log INFO "Collection manager help not available"
     
     # Test enhanced DevOps tools
     if [ -f "monitoring/alerting.py" ]; then

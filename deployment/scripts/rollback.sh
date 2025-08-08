@@ -9,7 +9,7 @@ set -e
 DEPLOYMENT_PATH="/opt/youtube_app"
 BACKUP_BASE_DIR="$DEPLOYMENT_PATH/backups"
 LOG_FILE="$DEPLOYMENT_PATH/logs/rollback.log"
-SERVICES=("youtube-scraper" "youtube-analytics")
+SERVICES=("youtube-scraper")
 
 # Colors for output
 RED='\033[0;31m'
@@ -238,7 +238,7 @@ restore_configuration() {
     fi
     
     # Restore systemd service files
-    for service in youtube-scraper youtube-analytics; do
+    for service in youtube-scraper; do
         if [ -f "$backup_path/config/$service.service" ]; then
             sudo cp "$backup_path/config/$service.service" "/etc/systemd/system/"
             log INFO "Service file restored: $service.service"

@@ -95,8 +95,8 @@ jobs:
         python -c "
         import sys, os
         sys.path.insert(0, '.')
-        from src.analytics.metrics.keywords_interval_metrics import *
-        from src.analytics.aggregators.category_metrics_aggregator import *
+        from src.scripts.youtube_scraper_production import YouTubeScraperProduction
+        from src.utils.firebase_client_enhanced import FirebaseClient
         print('✅ All modules import successfully')
         "
         

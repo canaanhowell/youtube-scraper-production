@@ -1,31 +1,36 @@
-# YouTube App
+# YouTube App - Video Collection Service
 
 ## Overview
-Enterprise-ready YouTube data collection app with automated deployment, VPN rotation, and comprehensive analytics.
+Enterprise-ready YouTube video collection service with automated deployment, VPN rotation, and multi-instance scaling.
 
-## Recent Updates (2025-08-06)
+## What This App Does
+- **Collects** YouTube videos for 70+ AI-related keywords
+- **Stores** video metadata in Firebase Firestore
+- **Deduplicates** using Redis cache
+- **Rotates** VPN servers for reliable access
+- **Scales** with 3 parallel collection instances
 
-### 🔄 Production System Enhanced
-- **NEW**: Staggered cron schedule - instances run at :00, :03, :06 (reduces load)
-- **NEW**: Automated log cleanup system - removes logs older than 5 days
-- **FIXED**: Interval metrics logging now uses proper timestamp IDs
-- Multi-instance collection working smoothly with 16 keywords
-- All analytics pipelines operational on production VM
+## What This App Does NOT Do
+- ❌ No metrics calculation
+- ❌ No trend analysis
+- ❌ No data aggregation
+- ❌ No analytics pipeline
+- ❌ Just pure video collection
+
+## Recent Updates (2025-08-08)
+
+### 🧹 Major Cleanup - Analytics Removal
+- **SIMPLIFIED**: Removed all metrics and analytics code
+- **FOCUSED**: App now only collects videos, no processing
+- **DELETED**: ~40+ files, ~5,000+ lines of analytics code
+- **UPDATED**: All deployment scripts and documentation
 
 ### 🚀 Production Features
 - **Auto-Deployment**: Push to GitHub = automatic VM deployment
 - **Staggered Collection**: 3 instances run every 10 minutes at :00/:03/:06
 - **Smart VPN Rotation**: 24 US Surfshark servers with health tracking
-- **Firebase Integration**: Real-time data storage and analytics
-- **Standardized Metrics v2.0**: Platform-normalized velocity scoring
-- **Title Filtering**: Strict keyword matching for improved data quality
-
-### 🔧 Latest Improvements
-- **Staggered Scheduling**: Instances spread across 6 minutes to reduce load
-- **Log Management**: Automated cleanup maintains database performance
-- **Better Logging**: All scripts now create consistent timestamp-based logs
-- **Resource Optimization**: Each VPN container gets dedicated time slot
-- **Documentation Updated**: All docs reflect current system state
+- **Firebase Integration**: Real-time video data storage
+- **Title Filtering**: Flexible keyword matching for multi-word terms
 
 ## Quick Start
 
@@ -37,176 +42,128 @@ cd youtube_app
 
 ### 2. Local Setup (Development)
 ```bash
-# Create .env file (copy from environments/development.env)
-ln -s environments/development.env .env
+# Create .env file
+cp environments/development.env .env
+# Edit .env with your credentials
 
-# Update .env with your Firebase credentials path
-vim .env
-# Set: GOOGLE_SERVICE_KEY_PATH=/path/to/your/firebase.json
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Note: VPN functionality requires Docker and only works on VM
 ```
 
 ### 3. Deploy to Production
 ```bash
-# Push to GitHub (triggers automatic deployment)
+# Simply push to GitHub
+git add .
+git commit -m "Deploy to production"
 git push origin main
 
-# SSH to VM and add .env (first time only)
-ssh -i /workspace/droplet1 root@134.199.201.56
-cd /opt/youtube_app
-vim .env  # Add production credentials
-
-# Deployment is now automatic and simplified:
-# ✅ No Git operations on production VM
-# ✅ Artifact-based deployment
-# ✅ Automatic health checks
-# ✅ Zero-downtime updates
+# GitHub Actions will automatically deploy to VM
 ```
 
 ## Project Structure
 ```
 youtube_app/
-├── youtube_collection_manager.py    # Main scraper orchestrator
-├── youtube_scraper_production.py    # Core YouTube scraping logic
 ├── src/
-│   ├── utils/                      # Utilities (Firebase, Redis, logging)
-│   ├── analytics/                  # Analytics pipeline
-│   └── scripts/                    # Executable scripts
-├── deployment/
-│   ├── scripts/                    # Deployment automation
-│   └── systemd/                    # Service configurations
-├── environments/                   # Environment configurations
-│   ├── development.env
-│   └── production.env
-└── .github/
-    └── workflows/
-        └── auto-deploy.yml         # GitHub Actions automation
+│   ├── scripts/           # Collection scripts
+│   ├── utils/             # Utilities (Firebase, Redis, VPN)
+│   └── config/            # Configuration files
+├── deployment/            # Deployment scripts
+├── tests/                 # Test suite
+├── docs/                  # Documentation
+└── logs/                  # Application logs
 ```
 
-## Key Features
-
-### 🌐 VPN Infrastructure
-- 24 verified US Surfshark servers
-- Automatic rotation and health tracking
-- Docker-based Gluetun container
-- Per-keyword isolation
-
-### 📊 Data Pipeline
-- Firebase Firestore storage
-- Redis caching with 24-hour TTL
-- Comprehensive analytics
-- Real-time metrics
-
-### 🚀 Deployment
-- **Simplified 3-Phase Process**: Infrastructure → GitHub → Monitor
-- **Artifact-Based**: No Git operations on production VM
-- **Smart Detection**: Only updates changed components
-- **Zero-Downtime**: Graceful service restarts
-- **Auto-Rollback**: Automatic rollback on deployment failure
-- **Health Checks**: Automatic verification post-deployment
-
-### 🔒 Security
-- Credentials in environment variables
-- `.env` and Firebase keys gitignored
-- VPN for anonymity
-- Rate limiting and retry logic
-
-## Configuration
-
-### Environment Variables (.env)
+## Environment Variables
 ```env
 # Firebase
-GOOGLE_SERVICE_KEY_PATH=/path/to/firebase.json
+GOOGLE_SERVICE_KEY_PATH=/path/to/firebase-key.json
 FIRESTORE_PROJECT_ID=your-project-id
 
 # Redis
 UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-token
 
-# VPN WireGuard Configuration
-SURFSHARK_PRIVATE_KEY=your-wireguard-private-key
+# VPN (VM only)
+SURFSHARK_PRIVATE_KEY=your-wireguard-key
 SURFSHARK_ADDRESS=10.14.0.2/16
 
-# App Settings
-ENVIRONMENT=production
-LOG_LEVEL=INFO
-
-# YouTube Scraper Settings
-YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (default: true)
-                                  # Set to false to collect all videos from search results
+# YouTube Settings
+YOUTUBE_STRICT_TITLE_FILTER=true
 ```
 
-## Deployment
-
-### Automatic (Recommended)
-1. Push to `main` branch
-2. GitHub Actions deploys automatically via artifact-based deployment
-3. SSH to VM and add `.env` file (first time only)
-
-### Manual (Emergency Only)
+## Production VM Access
 ```bash
-# Only use if automatic deployment fails
-ssh root@134.199.201.56
+# SSH to VM
+ssh -i /workspace/droplet1 root@134.199.201.56
+
+# Check logs
 cd /opt/youtube_app
-
-# Rollback using backup manager
-python3 deployment/scripts/backup_manager.py rollback
-
-# Or manual service restart
-sudo systemctl restart youtube-scraper
-```
-
-## Monitoring
-
-### Check Status
-```bash
-# View cron schedule
-crontab -l
-
-# Check recent logs
 tail -f logs/scraper.log
-tail -f logs/cron.log
 
-# View collection metrics
-python3 src/scripts/utilities/get_firebase_stats.py
+# Check collection status
+docker ps | grep youtube-vpn
 ```
 
-### View Metrics
-```bash
-# Check collection logs in Firebase
-python3 src/scripts/validators/check_collection.py
+## Collection Schedule
+- **Every 10 minutes**, staggered across 3 instances:
+  - Instance 1: :00, :10, :20, :30, :40, :50
+  - Instance 2: :03, :13, :23, :33, :43, :53
+  - Instance 3: :06, :16, :26, :36, :46, :56
 
-# Monitor VPN IP diversity
-python3 src/scripts/utilities/monitor_vpn_ips.py
+## Firebase Collections Used
+- `youtube_keywords` - Read keywords to collect
+- `youtube_videos/{keyword}/videos` - Store collected videos
+- `youtube_collection_logs` - Log collection runs
+
+## Testing
+```bash
+# Run unit tests
+python -m pytest tests/unit/
+
+# Run integration tests (requires credentials)
+python -m pytest tests/integration/
+
+# Run all tests
+./tests/run_all_tests.sh
 ```
 
 ## Troubleshooting
 
-### Common Issues
+### VPN Issues
+```bash
+# Check VPN container
+docker logs youtube-vpn-1
 
-1. **"Service account file not found"**
-   - Ensure `.env` has correct `GOOGLE_SERVICE_KEY_PATH`
-   - Verify Firebase JSON file exists at that path
+# Restart VPN
+docker restart youtube-vpn-1
+```
 
-2. **"No such file or directory: /opt/youtube_app"**
-   - Project renamed to `youtube_app`
-   - Update any scripts using old path
+### Collection Issues
+```bash
+# Check recent errors
+grep ERROR logs/error.log | tail -20
 
-3. **VPN Connection Failed**
-   - VPN only works on VM with Docker
-   - Cannot test VPN locally
+# Test single keyword
+python src/scripts/youtube_collection_manager_simple.py --instance 1 --test
+```
 
-4. **Title Filtering Issues**
-   - Check `YOUTUBE_STRICT_TITLE_FILTER` setting in `.env`
-   - Set to `true` for strict keyword matching (recommended)
-   - Set to `false` to collect all search results
+## Contributing
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-### Logs
-- Application: `logs/scraper.log`
-- Errors: `logs/error.log`
-- Network: `logs/network.log`
+## License
+Proprietary - All rights reserved
 
-## Repository
-https://github.com/canaanhowell/youtube-scraper-production
+## Support
+- Repository: https://github.com/canaanhowell/youtube-scraper-production
+- Documentation: `/docs/context/`
+- Logs: `/opt/youtube_app/logs/` (on VM)

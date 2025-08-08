@@ -100,7 +100,7 @@ backup_configuration() {
     
     # Backup service files
     if [ -d "/etc/systemd/system" ]; then
-        for service in youtube-scraper youtube-analytics; do
+        for service in youtube-scraper; do
             if [ -f "/etc/systemd/system/$service.service" ]; then
                 sudo cp "/etc/systemd/system/$service.service" "$backup_dir/config/" 2>/dev/null || true
             fi
@@ -183,7 +183,7 @@ backup_logs() {
     fi
     
     # Backup systemd journal logs
-    for service in youtube-scraper youtube-analytics; do
+    for service in youtube-scraper; do
         journalctl -u "$service" --since "7 days ago" > "$backup_dir/logs/$service-journal.log" 2>/dev/null || true
     done
     
@@ -214,7 +214,7 @@ create_backup_metadata() {
         "uptime": "$(uptime -p)"
     },
     "services_status": {
-$(for service in youtube-scraper youtube-analytics; do
+$(for service in youtube-scraper; do
     if systemctl is-active --quiet "$service"; then
         echo "        \"$service\": \"active\","
     else

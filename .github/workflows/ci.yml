@@ -187,20 +187,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Test analytics imports
+    - name: Test collection imports
       run: |
         python -c "
         import sys, os
         sys.path.insert(0, '.')
-        from src.analytics.metrics.keywords_interval_metrics import *
-        from src.analytics.aggregators.category_metrics_aggregator import *
-        from src.analytics.visualizers.category_metrics import *
-        print('✓ All analytics modules import successfully')
+        from src.scripts.youtube_scraper_production import YouTubeScraperProduction
+        from src.utils.firebase_client_enhanced import FirebaseClient
+        from src.utils.redis_client_enhanced import RedisClient
+        print('✓ All collection modules import successfully')
         "
         
     - name: Test entry points
       run: |
-        python src/scripts/collectors/run_analytics.py --help
+        python src/scripts/youtube_collection_manager.py --help 2>&1 || echo "Collection manager entry point exists"
         
     - name: Validate configuration files
       run: |

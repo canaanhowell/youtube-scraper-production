@@ -1,24 +1,22 @@
-# YouTube App - Complete Project Overview
+# YouTube App - Video Collection Service
 
 ## Executive Summary
 
-The YouTube App is a production-ready data collection and analytics system that continuously monitors YouTube for trending AI-related videos. It provides automated keyword-based video discovery, hourly trend analysis, and aggregated metrics for tracking the AI ecosystem's evolution on YouTube.
+The YouTube App is a production-ready video collection service that continuously monitors YouTube for AI-related videos. It provides automated keyword-based video discovery with VPN rotation for reliable access.
 
 **Key Value Propositions:**
 - Automated discovery of AI-related videos across 70+ active keywords
 - VPN-based collection with 24 US server rotation for reliability
-- Exact phrase matching for precise keyword filtering (e.g., "character ai" must appear exactly)
+- Flexible keyword matching with automatic space handling
 - Multi-instance parallel collection with staggered scheduling
-- Real-time trend analysis with velocity and acceleration metrics
-- Category-level aggregations for ecosystem insights
 - Enterprise-grade architecture with 100x scale design
 
 ## System Architecture
 
 ### Technical Stack
 - **Language**: Python 3.10+
-- **Database**: Firebase Firestore (NoSQL)
-- **Cache**: Upstash Redis (REST API)
+- **Database**: Firebase Firestore (NoSQL) - Video storage only
+- **Cache**: Upstash Redis (REST API) - Deduplication only
 - **Runtime**: Ubuntu VM (DigitalOcean Droplet)
 - **Collection**: wget-based HTTP scraping (20 videos/keyword)
 - **VPN**: Surfshark via WireGuard (24 US servers)
@@ -41,119 +39,57 @@ youtube_app/
 ├── src/
 │   ├── scripts/
 │   │   ├── youtube_collection_manager.py      # Main orchestrator
+│   │   ├── youtube_collection_manager_simple.py # Multi-instance version
 │   │   ├── youtube_scraper_production.py      # Core scraping logic
-│   │   └── collectors/               # Data collection scripts
-│   │       ├── run_analytics.py
-│   │       ├── run_full_pipeline.py
-│   │       └── run_scraper.py
-│   ├── analytics/                    # Analytics pipeline
-│   │   ├── metrics/                  # Metric calculators
-│   │   │   ├── youtube_keywords_interval_metrics.py
-│   │   │   ├── youtube_daily_metrics_unified.py
-│   │   │   └── youtube_daily_metrics_unified_vm.py
-│   │   ├── aggregators/              # Data aggregators
-│   │   │   ├── category_metrics_aggregator.py
-│   │   │   └── category_daily_snapshots.py
-│   │   └── visualizers/              # Visualization tools
-│   │       ├── youtube_categories.py
-│   │       ├── youtube_category_daily_snapshots.py
-│   │       └── youtube_keyword_metrics.py
-│   ├── scripts/                      # Additional scripts
-│   │   ├── utilities/                # Utility scripts
-│   │   │   ├── extract_youtube_data.py
-│   │   │   ├── get_firebase_stats.py
-│   │   │   └── monitor_vpn_ips.py
-│   │   └── validators/               # Validation scripts
-│   │       ├── check_collection.py
-│   │       └── debug_youtube_html.py
-│   ├── utils/                        # Shared utilities
+│   │   └── collectors/
+│   │       └── run_scraper.py                 # Scraper entry point
+│   ├── utils/                                 # Shared utilities
 │   │   ├── env_loader.py
 │   │   ├── logging_config_enhanced.py
-│   │   ├── firebase_client_enhanced.py
-│   │   ├── redis_client_enhanced.py
+│   │   ├── firebase_client_enhanced.py        # Video storage only
+│   │   ├── redis_client_enhanced.py           # Deduplication only
 │   │   ├── collection_logger.py
 │   │   ├── surfshark_servers.py
 │   │   └── wireguard_manager.py
-│   └── config/                       # Configuration files
+│   └── config/
 │       └── category_mapping.json
-├── deployment/                       # Deployment scripts
+├── deployment/                                # Deployment scripts
 │   ├── scripts/
-│   │   ├── smart_deploy.sh          # Intelligent deployment
-│   │   ├── service_detector.py      # Service detection
-│   │   ├── backup_manager.py        # Backup/restore
-│   │   ├── fix_daily_metrics_cron.sh
-│   │   ├── run_daily_metrics_now.sh
-│   │   └── setup_daily_metrics_cron.sh
-│   ├── systemd/                      # Service definitions
-│   │   ├── youtube-scraper.service
-│   │   ├── youtube-scraper.timer
-│   │   ├── youtube-analytics.service
-│   │   └── youtube-analytics.timer
-│   └── youtube_scraper_wrapper.sh
-├── tests/                           # Test suite
+│   │   ├── smart_deploy.sh
+│   │   ├── service_detector.py
+│   │   ├── backup_manager.py
+│   │   └── health_check.sh
+│   ├── youtube_scraper_wrapper.sh
+│   ├── youtube_collector_1.sh
+│   ├── youtube_collector_2.sh
+│   └── youtube_collector_3.sh
+├── tests/                                     # Test suite
 │   ├── unit/
-│   │   ├── test_youtube_scraper_production.py
-│   │   └── test_youtube_collection_manager.py
 │   ├── integration/
-│   │   ├── test_firebase_integration.py
-│   │   ├── test_redis_integration.py
-│   │   └── test_vpn_ip_rotation.py
-│   ├── performance/
-│   │   ├── load_test.py
-│   │   └── stress_test.py
-│   └── run_all_tests.sh
+│   └── performance/
 ├── docs/
-│   ├── context/                     # Project documentation
-│   │   ├── youtube_app.md
-│   │   ├── log.md
-│   │   ├── GUIDELINES.md
-│   │   └── firestore_mapping.md
-│   └── deployment/
-│       ├── deployment_guide.md
-│       └── droplet_connection_guide.md
-├── logs/                            # Application logs
-│   ├── scraper.log
-│   ├── analytics.log
-│   ├── daily_metrics.log
-│   ├── error.log
-│   └── network.log
-├── docker-compose.yml               # VPN container config
-├── requirements.txt                 # Python dependencies
-├── .env                            # Environment variables (gitignored)
-└── ai-tracker-466821-*.json        # Service account key (gitignored)
+│   └── context/                              # Project documentation
+│       ├── youtube_app.md
+│       ├── log.md
+│       └── firestore_mapping.md
+├── logs/                                      # Application logs
+├── docker-compose.yml                         # VPN container config
+├── docker-compose-multi.yml                   # Multi-VPN config
+├── requirements.txt                           # Python dependencies
+├── .env                                       # Environment variables (gitignored)
+└── ai-tracker-466821-*.json                   # Service account key (gitignored)
 ```
 
 ## Core Functionality
 
-### 1. Video Discovery
-- Searches YouTube for 70+ AI-related keywords every 10 minutes (staggered across 3 instances)
-- Collects video metadata: title, views, channel, duration
-- Exact phrase matching title filtering (YOUTUBE_STRICT_TITLE_FILTER=true)
-  - Multi-word keywords like "character ai" must appear exactly as "Character AI" or "character-ai"
+### Video Discovery
+- Searches YouTube for 70+ AI-related keywords every 10 minutes
+- Collects video metadata: title, views, channel, duration, upload date
+- Flexible space-aware title filtering (YOUTUBE_STRICT_TITLE_FILTER=true)
+  - Multi-word keywords match all variants: "grok 3" matches "Grok 3", "Grok3", and "grok-3"
   - Eliminates false matches where words appear in wrong order
 - Instance-specific Redis deduplication (24-hour cache with namespacing)
 - VPN rotation for reliable access across 3 parallel containers
-
-### 2. Interval Metrics (Hourly, immediately after scraper)
-- Runs automatically after each video collection
-- Calculates velocity (videos/hour) for each keyword
-- Tracks acceleration (change in velocity)
-- Updates rolling averages (24h, 7d)
-- Stores in youtube_keywords/{keyword}/interval_metrics subcollection
-
-### 3. Daily Metrics (2:00 AM daily)
-- Aggregates interval metrics by day
-- Calculates daily velocity and acceleration
-- Updates keyword daily_metrics field
-- Creates category-level snapshots
-- Creates all_youtube aggregate snapshots combining all keywords
-
-### 4. Category Aggregation
-- Groups keywords by AI category (chatbots, media generation, etc.)
-- Maintains 7, 30, 90-day, and all-time snapshots
-- **Keywords sorted by video_count descending** in all time windows for easy performance ranking
-- Tracks ecosystem-level trends
-- Auto-cleanup of old snapshots
 
 ## Development Guidelines
 
@@ -162,7 +98,7 @@ youtube_app/
 1. **No Fake Data - EVER**
    - Errors are always preferred over mock/placeholder data
    - If real data cannot be obtained, throw an error
-   - Never fabricate video counts or metrics
+   - Never fabricate video counts or metadata
 
 2. **100x Scale Test**
    - Every line of code must work at 100x current scale
@@ -186,20 +122,12 @@ youtube_app/
 
 ```
 YouTube Search (via VPN)
-    ↓ (hourly at :15)
+    ↓ (every 10 minutes)
 youtube_collection_manager.py
     ↓ (deduplication check)
 youtube_videos/{keyword}/videos collection
-    ↓ (immediately after)
-youtube_keywords_interval_metrics.py
     ↓
-youtube_keywords/{keyword}/interval_metrics subcollection
-    ↓ (daily at 2 AM)
-youtube_daily_metrics_unified_vm.py
-    ↓
-youtube_keywords (daily_metrics field)
-    ↓
-youtube_categories/* (category snapshots)
+youtube_collection_logs (audit trail)
 ```
 
 ## Environment Configuration
@@ -207,7 +135,7 @@ youtube_categories/* (category snapshots)
 ### Required Environment Variables
 ```bash
 # Firebase
-GOOGLE_SERVICE_KEY_PATH=/opt/youtube_app/ai-tracker-466821-892ecf5150a3.json
+GOOGLE_SERVICE_KEY_PATH=/opt/youtube_app/ai-tracker-466821-bc88c21c2489.json
 FIRESTORE_PROJECT_ID=ai-tracker-466821
 
 # Redis
@@ -226,283 +154,45 @@ LOG_LEVEL=INFO
 YOUTUBE_STRICT_TITLE_FILTER=true  # Only collect videos with keyword in title (default: true)
 ```
 
-## Primary Scripts and Their Firebase Collections
+## Primary Scripts
 
-### 1. youtube_collection_manager.py
+### youtube_collection_manager.py
 
 **Purpose**: Orchestrates YouTube video collection across all keywords
 
-**Schedule**: Every hour at :15 (cron)
+**Schedule**: Every 10 minutes (staggered across 3 instances)
 
 **Firebase Collections Used**:
+- **READS** from `youtube_keywords` - Gets active keywords
+- **WRITES** to `youtube_videos/{keyword}/videos` - Stores video metadata
+- **WRITES** to `youtube_collection_logs` - Logs collection runs
 
-#### READS from youtube_keywords
-- Queries: All documents (gets active keywords)
-- Fields used: keyword, category, last_collected
+### youtube_scraper_production.py
 
-#### WRITES to youtube_videos/{keyword}/videos
-- Creates new video documents with fields:
-  - `video_id` (string): YouTube video ID
-  - `title` (string): Video title
-  - `url` (string): Full YouTube URL
-  - `channel_name` (string): Channel name
-  - `channel_id` (string): YouTube channel ID
-  - `view_count` (number): Views at collection time
-  - `duration` (string): Video duration
-  - `published_time_text` (string): Relative publish time
-  - `thumbnail_url` (string): Thumbnail URL
-  - `collected_at` (timestamp): Collection timestamp
-  - `keyword` (string): Search keyword used
+**Purpose**: Core scraping logic using wget
 
-#### WRITES to youtube_collection_logs
-- Logs collection run details:
-  - `timestamp` (timestamp): Run time
-  - `session_id` (string): Unique session ID
-  - `script_name`: "youtube_collection_manager.py"
-  - `keywords_processed` (number): Keywords attempted
-  - `keywords_successful` (number): Successfully collected
-  - `keywords_failed` (number): Failed collections
-  - `total_videos_collected` (number): New videos found
-  - `vpn_servers_used` (array): VPN servers used
-  - `success_rate` (number): Success percentage
-  - `errors` (array): Any errors
-  - `duration_seconds` (number): Total run time
-
-### 2. youtube_keywords_interval_metrics.py
-
-**Purpose**: Calculates hourly metrics for trending analysis
-
-**Schedule**: Immediately after each scraper run hourly at :15 (via deployment/youtube_scraper_wrapper.sh)
-
-**Firebase Collections Used**:
-
-#### READS from youtube_videos/{keyword}/videos
-- Queries: All videos for each keyword
-- Aggregates: Count, views, new videos
-
-#### WRITES to youtube_keywords/{keyword}/interval_metrics
-- Creates metric documents with fields:
-  - `keyword` (string): The keyword
-  - `timestamp` (timestamp): Calculation time
-  - `video_count` (number): Total videos
-  - `new_videos` (number): New since last interval
-  - `velocity` (number): Videos per hour
-  - `acceleration` (number): Change in velocity
-  - `total_views` (number): Sum of all views
-  - `avg_views_per_video` (number): Average views
-  - `hours_since_last` (number): Hours since last metric
-
-#### UPDATES youtube_keywords
-- Updates rolling metric fields:
-  - `rolling_velocity_24h` (number): 24-hour average
-  - `rolling_acceleration_24h` (number): 24-hour acceleration
-  - `rolling_velocity_7d` (number): 7-day average
-  - `rolling_acceleration_7d` (number): 7-day acceleration
-  - `last_interval_update` (timestamp): Update time
-
-### 3. youtube_daily_metrics_unified_vm.py
-
-**Purpose**: Calculates daily aggregated metrics
-
-**Schedule**: Daily at 2:00 AM (cron)
-
-**Firebase Collections Used**:
-
-#### READS from youtube_keywords/{keyword}/interval_metrics
-- Queries: Previous day's interval metrics
-- Aggregates: Daily totals and averages
-
-#### UPDATES youtube_keywords
-- Updates daily_metrics map field:
-  - `daily_metrics.{YYYY-MM-DD}`:
-    - `date` (string): Date
-    - `video_count` (number): Total videos
-    - `new_videos_in_day` (number): New videos
-    - `velocity` (number): Daily velocity
-    - `acceleration` (number): Daily acceleration
-    - `total_views` (number): Total views
-    - `avg_views_per_video` (number): Average views
-    - `timestamp` (timestamp): Calculation time
-
-#### WRITES to youtube_categories/{category}/*/daily
-- Creates daily snapshots:
-  - `date` (string): YYYY-MM-DD
-  - `timestamp` (timestamp): Creation time
-  - `total_videos` (number): Category total
-  - `total_new_videos` (number): New videos
-  - `total_velocity` (number): Sum of velocities
-  - `avg_acceleration` (number): Average acceleration
-  - `total_views` (number): Total views
-  - `keywords` (map): Per-keyword metrics
-- Also creates youtube_categories/all_youtube/*/daily snapshots:
-  - Combines all keywords from all categories
-  - Provides platform-wide aggregate view
-
-#### WRITES to youtube_collection_logs
-- Logs daily metrics run:
-  - `run_type`: "daily_metrics"
-  - `script_name`: "youtube_daily_metrics_unified_vm.py"
-  - `date_processed` (string): Date calculated
-  - `keywords_processed` (number): Keywords processed
-  - `keyword_metrics_created` (number): Metrics created
-  - `category_snapshots_created` (number): Snapshots created
-  - `errors` (number): Error count
-  - `duration_seconds` (number): Run time
-
-## Script-to-Firestore Mapping with Data Flows
-
-### 1. Video Collection (Hourly at :15)
-**Script**: `youtube_collection_manager.py`
-
-#### Data Flow:
-```
-YouTube Search (via VPN)
-    ↓
-[Searches for each keyword]
-    ↓
-youtube_videos/{keyword}/videos/{video_id} ← NEW VIDEOS ONLY
-    │
-    └─ Fields saved:
-        - All video metadata
-        - collected_at timestamp
-    ↓
-youtube_collection_logs/{auto_id} ← LOG ENTRY
-    │
-    └─ Tracks:
-        - Session performance
-        - VPN servers used
-        - Success rate
-```
-
-#### Formulas:
-```python
-# Title Filtering (if YOUTUBE_STRICT_TITLE_FILTER=true)
-include_video = keyword.lower() in video_title.lower()
-
-# Deduplication
-is_duplicate = redis_client.exists(f"youtube:video:{video_id}")
-```
-
-### 2. Interval Metrics (Hourly, after scraper)
-**Script**: `youtube_keywords_interval_metrics.py`
-
-#### Data Flow:
-```
-youtube_videos/{keyword}/videos/* ← READS VIDEO DATA
-    ↓
-[Calculates metrics for each keyword]
-    ↓
-youtube_keywords/{keyword}/interval_metrics/{metric_id} ← CREATES METRIC DOC
-    │
-    └─ Calculates:
-        - Velocity (videos/hour)
-        - Acceleration
-        - View statistics
-    ↓
-youtube_keywords/{keyword} ← UPDATES ROLLING METRICS
-    │
-    └─ Updates:
-        - 24h rolling averages
-        - 7d rolling averages
-```
-
-#### Formulas:
-```python
-# Velocity (videos per hour)
-velocity = new_videos / hours_since_last_interval
-
-# Acceleration (change in velocity)
-acceleration = (current_velocity - previous_velocity) / hours_elapsed
-
-# Rolling averages
-rolling_velocity_24h = AVG(velocities from last 24 hours)
-rolling_velocity_7d = AVG(velocities from last 7 days)
-```
-
-### 3. Daily Metrics (Daily at 2:00 AM)
-**Script**: `youtube_daily_metrics_unified_vm.py`
-
-#### Data Flow:
-```
-youtube_keywords/{keyword}/interval_metrics/* ← READS INTERVAL METRICS
-    ↓
-[Aggregates by day for previous day]
-    ↓
-youtube_keywords/{keyword} ← UPDATES DAILY_METRICS FIELD
-    │
-    └─ Stores in map:
-        - daily_metrics.{date}
-    ↓
-youtube_categories/{category}/*/daily/{date} ← CREATES SNAPSHOTS
-    │
-    └─ Time windows:
-        - 7_days_daily
-        - 30_days_daily
-        - 90_days_daily
-        - all_time_daily
-```
-
-#### Formulas:
-```python
-# Daily Velocity
-velocity = new_videos_collected_today
-
-# Daily Acceleration
-acceleration = today_velocity - yesterday_velocity
-
-# Category Aggregations
-total_videos = SUM(keyword.video_count for all keywords in category)
-total_velocity = SUM(keyword.velocity for all keywords in category)
-avg_acceleration = AVG(keyword.acceleration for all keywords in category)
-```
-
-## Data Flow
-
-```
-YouTube Search (via wget)
-    ↓
-Collection Manager (hourly)
-    ↓
-youtube_videos collection (raw video data)
-    ↓
-Interval Metrics Calculator (hourly, after collection)
-    ↓
-youtube_keywords/{keyword}/interval_metrics
-    ↓
-Daily Metrics Calculator (2 AM daily)
-    ↓
-youtube_keywords.daily_metrics
-    ↓
-Category Aggregator
-    ↓
-youtube_categories/* (ecosystem insights)
-```
+**Features**:
+- wget-based collection (no browser needed)
+- Flexible keyword matching for multi-word terms
+- VPN IP rotation
+- Redis deduplication
+- Structured logging
 
 ## Schedule Summary
 
-### Scheduled Services
-| Service | Type | Schedule | Updates |
-|---------|------|----------|---------|
-| YouTube Scraper + Interval Metrics | Cron | Every 10 minutes | youtube_videos, interval_metrics |
-| Daily Metrics | Cron | Daily at 2:00 AM | daily_metrics, snapshots |
+### Multi-Instance Collection (Every 10 minutes)
+- **Instance 1**: Runs at :00, :10, :20, :30, :40, :50 (youtube-vpn-1)
+- **Instance 2**: Runs at :03, :13, :23, :33, :43, :53 (youtube-vpn-2)  
+- **Instance 3**: Runs at :06, :16, :26, :36, :46, :56 (youtube-vpn-3)
 
-### Active Services:
-- **Multi-Instance Collection**: Staggered schedule every 10 minutes (individual cron entries)
-  - Instance 1: Runs at :00, :10, :20, :30, :40, :50 (youtube-vpn-1)
-  - Instance 2: Runs at :03, :13, :23, :33, :43, :53 (youtube-vpn-2)  
-  - Instance 3: Runs at :06, :16, :26, :36, :46, :56 (youtube-vpn-3)
-  - Dynamic keyword distribution across instances
-- **Interval Metrics**: Runs at :09, :19, :29, :39, :49, :59 (after all instances)
-- **Daily Metrics**: 2:00 AM daily (cron) - `/opt/youtube_app/deployment/cron_daily_metrics.sh`
-- **Weekly Log Cleanup**: Sundays at 3 AM UTC - removes logs older than 5 days
-- **Analytics Timer**: DISABLED (was causing metrics to run every 5 minutes)
+Each instance processes ~24 keywords, collecting up to 20 videos per keyword.
 
 ## VPN System
 
 ### Architecture
 - **Provider**: Surfshark via WireGuard
-- **Servers**: 80 US city servers
-- **Container**: Docker with Gluetun
+- **Servers**: 24 US city servers
+- **Containers**: 3 Docker containers with Gluetun
 - **Rotation**: Smart server selection with health tracking
 
 ### Server Management
@@ -537,8 +227,7 @@ youtube_categories/* (ecosystem insights)
 
 1. **Log Files**:
    - `/opt/youtube_app/logs/scraper.log` - Collection logs
-   - `/opt/youtube_app/logs/analytics.log` - Analytics pipeline
-   - `/opt/youtube_app/logs/daily_metrics.log` - Daily metrics
+   - `/opt/youtube_app/logs/collector_*.log` - Instance-specific logs
    - `/opt/youtube_app/logs/error.log` - Error logs
    - `/opt/youtube_app/logs/network.log` - API requests
 
@@ -547,28 +236,22 @@ youtube_categories/* (ecosystem insights)
 # Check collection status
 tail -f /opt/youtube_app/logs/scraper.log
 
-# View systemd timers
-systemctl list-timers --all | grep youtube
-
 # Check cron jobs
 crontab -l
 
-# Manual metrics run
-bash deployment/scripts/run_daily_metrics_now.sh
+# View VPN status
+docker ps | grep youtube-vpn
 ```
 
 ## Performance & Scaling
 
 ### Current Performance Metrics
-- **Active Keywords**: 70 keywords (expanded from original 16-keyword baseline)
-- **Videos per Collection**: 10-20 new videos per keyword for popular keywords (e.g., ChatGPT, Claude)
-- **Collection Time per Instance**: ~75 seconds (processing 24 keywords each across 3 instances)
-- **Total Collection Time**: <2 minutes for all 70 keywords across 3 staggered instances
-- **Interval Metrics**: ~5 seconds for all keywords
-- **Daily Metrics**: ~37 seconds for aggregation (8x faster with range query optimization)
-- **VPN Containers**: 3 parallel containers (youtube-vpn-1, youtube-vpn-2, youtube-vpn-3)
-- **Redis Deduplication**: Instance-specific namespacing (instance_N:video:ID) prevents false duplicates
-- **Exact Phrase Filtering**: Improves data quality by eliminating irrelevant matches
+- **Active Keywords**: 70+ keywords
+- **Videos per Collection**: 10-20 new videos per keyword
+- **Collection Time per Instance**: ~75 seconds (processing 24 keywords each)
+- **Total Collection Time**: <2 minutes for all keywords across 3 instances
+- **VPN Containers**: 3 parallel containers
+- **Redis Deduplication**: Instance-specific namespacing prevents false duplicates
 
 ### Scaling Limits
 - **Keywords**: Designed for 100+ keywords
@@ -576,14 +259,6 @@ bash deployment/scripts/run_daily_metrics_now.sh
 - **VPN Servers**: 24 servers provide redundancy
 - **Database**: Firestore scales automatically
 - **Cache**: Redis handles deduplication efficiently
-
-### Performance Optimizations
-1. **VPN Rotation**: Smart server selection
-2. **Redis Deduplication**: O(1) lookup for duplicates
-3. **Batch Processing**: Efficient keyword processing
-4. **Async Operations**: Non-blocking I/O
-5. **Efficient Queries**: Optimized Firestore queries
-6. **Range Query Optimization (2025-08-06)**: Daily metrics aggregation now uses Firebase range queries instead of individual document fetches (8x performance improvement from 5+ minutes to 37 seconds)
 
 ## Security & Access
 
@@ -628,26 +303,21 @@ bash deployment/scripts/run_daily_metrics_now.sh
    - Verify VPN is working (check IP)
    - Check keyword exists on YouTube
 
-3. **Metrics Not Calculating**:
-   - Verify systemd timer is active
-   - Check for interval metrics data
-   - Review analytics.log for errors
-
-4. **Daily Metrics Missing**:
-   - Check cron job is scheduled
-   - Verify interval metrics exist for date
-   - Run manual calculation
+3. **Redis Connection Issues**:
+   - Verify Redis credentials
+   - Check network connectivity
+   - Ensure REST URL is correct
 
 ### Debug Commands
 
 ```bash
 # Check VPN status
 docker ps | grep youtube-vpn
-docker logs youtube-vpn
+docker logs youtube-vpn-1
 
 # Test collection for one keyword
 cd /opt/youtube_app && source venv/bin/activate
-python src/scripts/youtube_collection_manager.py --test
+python src/scripts/youtube_collection_manager_simple.py --instance 1 --test
 
 # Check Firebase connection
 python -c "from src.utils.firebase_client_enhanced import FirebaseClient; 
@@ -657,176 +327,6 @@ f = FirebaseClient(); print('Connected' if f.db else 'Failed')"
 grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ```
 
-## Recent Changes (August 6, 2025)
-
-### Staggered Cron Schedule Implementation
-- **Status**: ✅ Completed and Active
-- **Issue**: All 3 instances were starting simultaneously, causing resource spikes
-- **Solution**: Implemented individual cron entries with staggered timing
-- **Schedule**:
-  - Instance 1: :00, :10, :20, :30, :40, :50
-  - Instance 2: :03, :13, :23, :33, :43, :53 (3-minute offset)
-  - Instance 3: :06, :16, :26, :36, :46, :56 (6-minute offset)
-  - Interval Metrics: :09, :19, :29, :39, :49, :59
-- **Benefits**: Spreads load across 6+ minutes, reduces resource contention
-
-### Log Cleanup System
-- **Status**: ✅ Completed
-- **Feature**: Automated cleanup of collection logs older than 5 days
-- **Components**:
-  - `cleanup_old_collection_logs.py` - Interactive cleanup with confirmation
-  - `cleanup_old_logs_auto.py` - Automated cleanup for cron
-  - Weekly cron job: Sundays at 3 AM UTC
-- **Impact**: Maintains database performance by removing old logs
-
-### Interval Metrics Logging Fix
-- **Status**: ✅ Completed
-- **Issue**: Interval metrics script was creating hash IDs in collection logs
-- **Solution**: Updated to use Firebase client's `log_collection_run` method
-- **Result**: All logs now use consistent timestamp-based IDs
-
-## Recent Changes (August 5, 2025)
-
-### Multi-Instance Collection System Implementation
-- **Status**: ✅ Completed and Working Properly
-- **Initial Issue**: Keyword count increased (was 42 at peak), causing collection to exceed 10-minute cron interval
-- **Root Causes Identified**: 
-  1. Multiple collection instances overlapping and fighting over single VPN container
-  2. Shared Redis cache causing false duplicate detection between parallel instances
-- **Solution Implemented**:
-  - Created docker-compose-multi.yml with 3 VPN containers (ports 8000, 8003, 8004)
-  - Built youtube_collection_manager_simple.py for simpler VPN handling
-  - Dynamic keyword distribution across instances (evenly divided)
-  - Process locking prevents overlapping runs of same instance
-  - Fixed Firebase logging format with proper keywords_processed array and videos_per_keyword map
-  - Added update_keyword_timestamp method to FirebaseClient
-  - **Critical Fix**: Added instance-specific Redis key namespacing (`instance_N:video:ID`)
-- **Files Created/Modified**:
-  - `/workspace/youtube_app/docker-compose-multi.yml`
-  - `/workspace/youtube_app/src/scripts/youtube_collection_manager_simple.py`
-  - `/workspace/youtube_app/src/utils/firebase_client_enhanced.py`
-  - `/workspace/youtube_app/deployment/youtube_collector_[1-3].sh`
-  - `/workspace/youtube_app/deployment/cron_scraper_multi.sh`
-  - `/workspace/youtube_app/src/scripts/youtube_scraper_production.py` (Redis namespacing)
-- **Impact**: System now collects proper video counts (ChatGPT: 20 videos vs previous 5) and can handle 40+ keywords without overlaps
-
-## Recent Changes (August 5, 2025)
-
-### Collection Logs Hash ID Fix
-- **Status**: ✅ Completed
-- **Issue**: Documents in youtube_collection_logs were being created with auto-generated hash IDs
-- **Root Cause**: collection_logger.py was using session_id as document ID
-- **Major Changes**:
-  - Updated collection_logger.py to generate timestamp-based IDs (collection_YYYY-MM-DD_HH-MM-SS_UTC)
-  - Added validation to all Firebase client methods (firebase_client.py, firebase_client_enhanced.py, firebase_client_with_logging.py)
-  - Created monitoring tool: `src/scripts/utilities/monitor_collection_logs.py`
-  - Created cleanup script: `check_and_fix_collection_logs.py`
-  - Fixed import paths in collection_logger.py
-- **Impact**: All collection logs now use consistent, readable timestamp-based document IDs
-
-### Critical Fixes - Video Storage & Keywords
-- **Status**: ✅ Completed
-- **Major Changes**:
-  - Fixed video storage issue - created missing Firestore parent documents
-  - Synchronized all keywords with reddit_keywords baseline (16 keywords)
-  - Merged duplicate video collections (stable_diffusion, leonardo_ai, runway, chatgpt)
-  - Fixed YouTube filter to `sp=CAISBAgBEAE%253D` (sort by upload date + last hour)
-  - Updated collection schedule to run every 10 minutes
-  - Cleaned up 95+ hash document IDs in collection logs
-  - Updated scraper to auto-create parent documents before saving videos
-- **Impact**: Proper hourly video collection with correct time filtering
-
-## Previous Changes (January 5, 2025)
-
-### Project Structure Cleanup
-- **Status**: ✅ Completed
-- **Major Change**: Moved all Python scripts from root to src/ directories
-- **Directory Changes**:
-  - All Python scripts moved from root to `src/` directories
-  - Better organized structure matching industry standards
-  - Organized Python scripts in src/ directories
-- **Path Updates**:
-  - All deployment scripts updated for new paths
-  - GitHub workflows updated
-  - Cron jobs need updating on VM after deployment
-- **Impact**: Clearer distinction between two YouTube scrapers
-
-## Previous Changes (August 4, 2024)
-
-### Firebase Schema v2.0 Migration - COMPLETED
-- **Status**: ✅ Completed and Deployed to Production
-- **Major Achievement**: Complete Firebase schema migration to v2.0 standardized metrics
-- **Migration Results**:
-  - ✅ 15 keywords migrated: daily_metrics subcollection → map field
-  - ✅ 566 category snapshot documents updated with new field names
-  - ✅ Field transformations: videos_found_in_day → new_videos_in_day, views_count → total_views
-  - ✅ Legacy fields removed, document structure cleaned
-  - ✅ All production systems updated to v2.0 schema
-- **Files Modified**:
-  - `migrate_firebase_schema_v2.py` - Created comprehensive migration script
-  - `youtube_daily_metrics_unified_vm.py` - Updated to write new schema format
-  - `firestore_mapping.md` - Updated to reflect v2.0 schema
-- **Impact**: Production database now fully aligned with v2.0 standardized metrics
-
-### Platform Baseline System Simplified
-- **Status**: ✅ Completed and Active in Production
-- **Major Simplification**: Removed complex calculation system in favor of hardcoded approach
-- **Components Changed**:
-  - Removed `calculate_platform_baseline.py` (complex calculation script)
-  - Added `set_platform_baseline.py` (simple hardcoded baseline setter)
-  - Hardcoded YouTube baseline to 150.0 videos/day
-  - Updated all documentation to reflect manual management approach
-  - Simplified platform_metrics document structure
-- **Files Modified**:
-  - Deleted `calculate_platform_baseline.py`
-  - Added `set_platform_baseline.py`
-  - Updated all documentation files
-  - Simplified `platform_metrics/youtube` document
-- **Impact**: Much simpler baseline management with direct control over platform baselines
-
-### Standardized Metrics v2.0 System Implementation
-- **Status**: ✅ Completed and Active in Production
-- **Major Enhancement**: Complete metrics standardization system
-- **Components Added**:
-  - Platform-normalized velocity scoring (% of baseline)
-  - Keyword-relative acceleration (vs own history)
-  - Momentum score (0-100) with trend analysis
-  - Unified trend score v2 (combined ranking)
-  - Hardcoded platform baseline storage
-  - Cross-platform comparison capability
-- **Files Modified**:
-  - `youtube_daily_metrics_unified_vm.py` - Core metrics calculation
-  - `set_platform_baseline.py` - Simple baseline management
-  - `firestore_mapping.md` - Schema updated to v2.0
-  - Added `platform_metrics` collection
-- **Impact**: Revolutionary improvement in trend analysis and cross-platform comparison
-
-### Interval Metrics Timing Fixed
-- **Status**: ✅ Completed
-- **Issues Resolved**:
-  - Fixed interval metrics running every 5 minutes instead of hourly
-  - Disabled systemd analytics timer causing excessive runs
-  - Integrated interval metrics into hourly scraper cron job
-  - Now runs correctly: Scraper at :15, interval metrics immediately after
-- **Impact**: Proper hourly data flow restored
-
-### Analytics Pipeline Fixed
-- **Status**: ✅ Completed
-- **Issues Resolved**:
-  - Fixed systemd service ExecStartPre command
-  - Daily metrics cron job verified working
-  - Created fix scripts for future use
-- **Impact**: All metrics now calculating properly
-
-### Documentation Updates
-- **Status**: ✅ Completed
-- **Changes**:
-  - Updated log.md with current status and v2.0 metrics
-  - Added detailed formulas and data flows
-  - Enhanced firestore_mapping.md with v2.0 schema
-  - Synced with master_docs
-- **Result**: Complete documentation coverage
-
 ## Key Design Decisions
 
 1. **Title Filtering**: Optional keyword-in-title requirement
@@ -835,29 +335,25 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 2. **VPN Rotation**: 24 US servers with smart selection
    - **Why**: Reliability and anonymity
 
-3. **Interval Metrics**: Hourly (after each collection) instead of continuous
-   - **Why**: Provides fresh data while avoiding excessive calculations
+3. **Multi-Instance Collection**: 3 parallel instances
+   - **Why**: Scalability without overloading
 
-4. **Category Aggregation**: Multiple time windows
-   - **Why**: Different insights for different time scales
-
-5. **Redis Deduplication**: 24-hour cache
+4. **Redis Deduplication**: 24-hour cache
    - **Why**: Prevents duplicate videos while allowing re-discovery
+
+5. **Collection Only**: No metrics or analytics
+   - **Why**: Single responsibility, focused service
 
 ## Integration Points
 
 ### With Other Systems
-- **Product Hunt Sync**: Keywords auto-added from PH top products
-- **All Categories Aggregator**: Combines Reddit and YouTube data
 - **Shared Firebase**: Same project as Reddit and PH apps
+- **Keywords Source**: Synced with other collection systems
 
 ### Firebase Collections
-- `keywords`: Source keywords with categories
-- `youtube_videos/{keyword}/videos`: Raw video data
-- `youtube_keywords/{keyword}/interval_metrics`: Hourly metrics (subcollection)
-- `youtube_keywords`: Configuration and daily metrics
-- `youtube_categories`: Category-level aggregations
-- `youtube_collection_logs`: Audit trail
+- `youtube_keywords` - Source keywords (read only)
+- `youtube_videos/{keyword}/videos` - Video storage
+- `youtube_collection_logs` - Audit trail
 
 ## Maintenance Notes
 
@@ -865,15 +361,15 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 1. **Daily**: Check collection success rate
 2. **Weekly**: Review VPN server performance
-3. **Monthly**: Analyze keyword performance
-4. **Quarterly**: Archive old interval metrics
+3. **Monthly**: Clean up old logs
+4. **Quarterly**: Review keyword performance
 
 ### Update Procedures
 
 1. Test locally if possible (limited due to VPN)
 2. Deploy via GitHub push to main
 3. Monitor logs for 24 hours
-4. Fix scripts available if issues arise
+4. Rollback if issues arise
 
 ## Contact & Support
 
@@ -884,5 +380,5 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ---
 
-*Last Updated: 2025-08-06*
-*Document Version: 2.8 - Added category time window sorting by video_count*
+*Last Updated: 2025-08-08*
+*Document Version: 3.0 - Simplified to collection-only service*

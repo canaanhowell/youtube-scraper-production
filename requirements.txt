@@ -1,4 +1,4 @@
-# YouTube Scraper Production Dependencies
+# YouTube Video Collection Service Dependencies
 
 # Firebase
 firebase-admin>=6.5.0
@@ -15,29 +15,12 @@ python-dotenv>=1.0.1
 # Date/time handling
 pytz>=2024.1
 
-# JSON handling (usually built-in)
-# json - built-in
-
-# System utilities (usually built-in)
-# os, sys, subprocess, pathlib - built-in
-
-# Regular expressions (usually built-in) 
-# re - built-in
-
-# Logging (usually built-in)
-# logging - built-in
-
-# Additional utilities
-# time, datetime - built-in
-# typing - built-in
-
-# Analytics dependencies
+# Collection dependencies
 playwright>=1.48.0       # For enhanced scraping capabilities
-numpy>=1.26.0           # For numerical computations in metrics
 aiofiles>=24.2.0        # For async file operations
 colorama>=0.4.6         # For colored console output
 
-# Enhanced DevOps Tool Dependencies
+# DevOps Tool Dependencies
 # Monitoring and alerting
 psutil>=5.9.0           # System resource monitoring
 
