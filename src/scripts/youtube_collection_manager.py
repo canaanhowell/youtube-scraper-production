@@ -64,16 +64,39 @@ class YouTubeCollectionManager:
             self.container_name = 'youtube-vpn'
             self.docker_compose_path = Path('/opt/youtube_app/docker-compose.yml')
             
+            # Extract instance ID from container name if available
+            # Container names are typically: youtube-vpn-1, youtube-vpn-2, youtube-vpn-3
+            instance_id = 1  # Default
+            if '-' in self.container_name:
+                try:
+                    instance_id = int(self.container_name.split('-')[-1])
+                except (ValueError, IndexError):
+                    instance_id = 1
+            
+            # Get hostname
+            try:
+                import socket
+                hostname = socket.gethostname()
+            except:
+                hostname = 'unknown'
+            
             # Collection tracking
-            self.session_id = f"session_{int(time.time())}"
+            self.session_id = f"session_{int(time.time())}_{instance_id}"
             self.collection_stats = {
                 'session_id': self.session_id,
                 'start_time': datetime.now(timezone.utc),
+                'script_name': 'youtube_collection_manager.py',
                 'keywords_processed': [],
+                'keywords_successful': 0,
+                'keywords_failed': 0,
                 'total_videos_collected': 0,
                 'videos_per_keyword': {},
+                'success_rate': 0.0,
                 'errors': [],
-                'success': False
+                'success': False,
+                'container': self.container_name,
+                'instance_id': instance_id,
+                'vm_hostname': hostname
             }
             
             # Get available servers and initialize server health tracking
@@ -346,11 +369,18 @@ class YouTubeCollectionManager:
                 try:
                     # Process keyword with VPN retry logic
                     result = self.process_keyword_with_retry(keyword)
-                    successful_keywords.append(keyword)
-                    self.collection_stats['keywords_processed'].append(keyword)
                     
-                    # Log success
-                    logger.info(f"✅ Successfully processed keyword '{keyword}' ({i}/{len(keywords)})")
+                    # Check if keyword was actually successful (saved videos > 0)
+                    videos_saved = result if isinstance(result, int) else 0
+                    
+                    if videos_saved > 0:
+                        successful_keywords.append(keyword)
+                        self.collection_stats['keywords_processed'].append(keyword)
+                        logger.info(f"✅ Successfully collected {videos_saved} videos for '{keyword}' ({i}/{len(keywords)})")
+                    else:
+                        # No videos saved = failed (even if no exception thrown)
+                        failed_keywords.append(keyword)
+                        logger.warning(f"⚠️ No videos saved for keyword '{keyword}' - marking as failed")
                     
                     # Log server health status after each keyword
                     logger.info(f"Server health status - Working: {len(self.working_servers)}, "
@@ -380,11 +410,15 @@ class YouTubeCollectionManager:
             failure_count = len(failed_keywords)
             success_rate = (success_count / total_keywords) * 100 if total_keywords > 0 else 0
             
-            # Consider collection successful if at least 50% of keywords succeeded
-            self.collection_stats['success'] = success_rate >= 50.0
+            # Update collection stats with proper counts
+            self.collection_stats['keywords_successful'] = success_count
+            self.collection_stats['keywords_failed'] = failure_count
             self.collection_stats['success_rate'] = success_rate
             self.collection_stats['successful_keywords'] = successful_keywords
             self.collection_stats['failed_keywords_list'] = failed_keywords
+            
+            # Consider collection successful if at least 50% of keywords succeeded
+            self.collection_stats['success'] = success_rate >= 50.0
             
             # Log final results
             if success_rate >= 50.0:

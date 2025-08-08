@@ -201,23 +201,29 @@ class FirebaseClient:
                 self.logger.error(f"Invalid document ID format: {doc_id}")
                 raise ValueError(f"Document ID must be a timestamp format, got: {doc_id}")
             
-            # Prepare log data
+            # Prepare log data with all required fields from firestore_mapping.md
             log_data = {
                 'timestamp': firestore.SERVER_TIMESTAMP,
                 'timestamp_readable': timestamp.isoformat(),
                 'timestamp_unix': timestamp.timestamp(),
+                'session_id': collection_stats.get('session_id', 'unknown'),
+                'script_name': collection_stats.get('script_name', 'unknown'),
                 'keywords_processed': collection_stats.get('keywords_processed', []),
+                'keywords_successful': collection_stats.get('keywords_successful', 0),
+                'keywords_failed': collection_stats.get('keywords_failed', 0),
                 'total_videos_collected': collection_stats.get('total_videos_collected', 0),
                 'videos_per_keyword': collection_stats.get('videos_per_keyword', {}),
-                'duration_seconds': collection_stats.get('duration_seconds', 0),
-                'success': collection_stats.get('success', False),
-                'errors': collection_stats.get('errors', []),
-                'session_id': collection_stats.get('session_id', 'unknown'),
                 'vpn_servers_used': collection_stats.get('vpn_servers_used', []),
-                'redis_enabled': collection_stats.get('redis_enabled', False),
-                'duplicates_filtered': collection_stats.get('duplicates_filtered', 0),
+                'success_rate': collection_stats.get('success_rate', 0.0),
+                'errors': collection_stats.get('errors', []),
+                'duration_seconds': collection_stats.get('duration_seconds', 0),
                 'container': collection_stats.get('container', 'unknown'),
-                'vm_hostname': collection_stats.get('vm_hostname', 'unknown')
+                'instance_id': collection_stats.get('instance_id', 0),
+                'vm_hostname': collection_stats.get('vm_hostname', 'unknown'),
+                'success': collection_stats.get('success', False),
+                # Additional fields for completeness
+                'redis_enabled': collection_stats.get('redis_enabled', False),
+                'duplicates_filtered': collection_stats.get('duplicates_filtered', 0)
             }
             
             # Create document with readable timestamp as ID
