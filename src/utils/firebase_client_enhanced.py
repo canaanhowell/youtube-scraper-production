@@ -334,10 +334,15 @@ class FirebaseClient:
                     else:
                         self.logger.warning(f"Document {doc.id} missing keyword/name field: {doc_data}")
                 
+                # Sort keywords in reverse alphabetical order (Z to A)
+                # This ensures "claude code" runs before "claude" to prevent duplicates
+                keywords.sort(key=lambda k: k.get('keyword', ''), reverse=True)
+                
                 # Enhanced logging with timestamp for freshness verification
                 current_time = datetime.utcnow().isoformat()
                 self.logger.info(f"Successfully retrieved {len(keywords)} active keywords with data from {doc_count} documents")
                 self.logger.info(f"Keywords retrieved at: {current_time}")
+                self.logger.info(f"Keywords sorted in reverse alphabetical order: {[k.get('keyword', '') for k in keywords]}")
                 
                 if not keywords:
                     self.logger.warning("No active keywords found in Firebase - this might indicate a data issue")

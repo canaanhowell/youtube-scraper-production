@@ -2,14 +2,15 @@
 
 ## Executive Summary
 
-The YouTube App is a production-ready video collection service that continuously monitors YouTube for AI-related videos. It provides automated keyword-based video discovery with VPN rotation for reliable access.
+**⚠️ COLLECTION-ONLY SERVICE** - The YouTube App is a production-ready video collection service focused solely on collecting YouTube videos. **All analytics and metrics processing have been completely removed** to create a lean, high-performance collection system.
 
 **Key Value Propositions:**
-- Automated discovery of AI-related videos across 70+ active keywords
-- VPN-based collection with 24 US server rotation for reliability
-- Flexible keyword matching with automatic space handling
-- Multi-instance parallel collection with staggered scheduling
-- Enterprise-grade architecture with 100x scale design
+- **Collection Only**: Automated discovery of AI-related videos across 70+ active keywords
+- **No Analytics**: Pure collection service - no metrics, aggregations, or trend analysis
+- **High Performance**: VPN-based collection with 24 US server rotation for reliability
+- **Smart Matching**: Flexible keyword matching with automatic space handling
+- **Parallel Processing**: Multi-instance parallel collection with staggered scheduling
+- **Enterprise Architecture**: Designed for 100x scale
 
 ## System Architecture
 
@@ -32,7 +33,7 @@ The YouTube App is a production-ready video collection service that continuously
 - **Python Environment**: Virtual environment at `/opt/youtube_app/venv`
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
-### Project Structure
+### Project Structure (Collection-Only)
 
 ```
 youtube_app/
@@ -43,16 +44,17 @@ youtube_app/
 │   │   ├── youtube_scraper_production.py      # Core scraping logic
 │   │   └── collectors/
 │   │       └── run_scraper.py                 # Scraper entry point
-│   ├── utils/                                 # Shared utilities
+│   ├── utils/                                 # Collection utilities only
 │   │   ├── env_loader.py
 │   │   ├── logging_config_enhanced.py
-│   │   ├── firebase_client_enhanced.py        # Video storage only
-│   │   ├── redis_client_enhanced.py           # Deduplication only
+│   │   ├── firebase_client_enhanced.py        # Video storage ONLY
+│   │   ├── redis_client_enhanced.py           # Deduplication ONLY
 │   │   ├── collection_logger.py
 │   │   ├── surfshark_servers.py
 │   │   └── wireguard_manager.py
 │   └── config/
 │       └── category_mapping.json
+│   # ❌ REMOVED: src/analytics/ - ALL analytics code deleted
 ├── deployment/                                # Deployment scripts
 │   ├── scripts/
 │   │   ├── smart_deploy.sh
@@ -118,16 +120,22 @@ youtube_app/
 - No magic numbers - use constants
 - Clear logging at INFO level minimum
 
-## Data Flow Pipeline
+## Data Flow Pipeline (Collection Only)
 
 ```
 YouTube Search (via VPN)
-    ↓ (every 10 minutes)
-youtube_collection_manager.py
-    ↓ (deduplication check)
-youtube_videos/{keyword}/videos collection
+    ↓ (every 10 minutes, 3 staggered instances)
+youtube_collection_manager_simple.py
+    ↓ (Redis deduplication check)
+youtube_videos/{keyword}/videos collection ← VIDEO DATA STORED
     ↓
-youtube_collection_logs (audit trail)
+youtube_collection_logs (audit trail) ← COLLECTION STATS ONLY
+    
+❌ NO ANALYTICS PROCESSING
+❌ NO METRICS CALCULATION
+❌ NO TREND ANALYSIS
+
+✅ Pure video collection and storage
 ```
 
 ## Environment Configuration
@@ -381,4 +389,7 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ---
 
 *Last Updated: 2025-08-08*
-*Document Version: 3.0 - Simplified to collection-only service*
+*Document Version: 3.1 - Updated post-analytics removal*
+
+**⚠️ MAJOR ARCHITECTURAL CHANGE (August 8, 2025):**
+All analytics and metrics processing have been completely removed. This app now exclusively performs video collection. All analytics functionality has been moved to separate services.

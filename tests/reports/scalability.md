@@ -1,24 +1,25 @@
-# YouTube Scraper Scalability Analysis Report
+# YouTube Video Collection Service Scalability Analysis Report
 
-**Date**: 2025-08-05  
-**System**: Bulletproof Production Architecture  
-**Scope**: 50-500 Keywords Scaling Strategy
+**Date**: 2025-08-08 (Updated)  
+**System**: Collection-Only Service Architecture  
+**Scope**: Current 70+ Keywords to 200+ Keywords Scaling Strategy
 
 ## Executive Summary
 
-This report analyzes the scalability characteristics of the YouTube scraper system and provides recommendations for scaling from the current 50-keyword capacity to 500+ keywords while maintaining reliability and performance.
+This report analyzes the scalability characteristics of the simplified YouTube video collection service. With analytics removed, the system has significantly improved scalability potential and reduced complexity for scaling from the current 70+ keywords to 200+ keywords while maintaining reliability.
 
 ## Current Architecture Scalability
 
-### Component Analysis
+### Component Analysis (Collection-Only)
 
 | Component | Current State | Scalability | Bottleneck Risk |
 |-----------|--------------|-------------|-----------------|
-| VPN Infrastructure | 80 servers, sequential | Limited by rotation time | HIGH |
-| Redis Cache | Native client, 24h TTL | Excellent, auto-scales | LOW |
-| Firebase | Managed service | Excellent, auto-scales | LOW |
-| VM Resources | 4 vCPU, 8GB RAM | Good headroom | MEDIUM |
-| Network I/O | Sequential requests | Limited by VPN | HIGH |
+| VPN Containers | 3 parallel, 24 servers | Good, can expand | MEDIUM |
+| Redis Cache | Deduplication only, 24h TTL | Excellent | LOW |
+| Firebase | Video storage only | Excellent, auto-scales | LOW |
+| VM Resources | 4 vCPU, 8GB RAM, 70+ keywords | Good headroom | LOW |
+| Multi-Instance | 3 instances, staggered | Excellent scalability | LOW |
+| **Analytics Overhead** | **REMOVED** | **No longer a factor** | **ELIMINATED** |
 
 ### Scaling Characteristics
 

@@ -19,11 +19,11 @@ You have 2 rules:
 - **Location**: `/opt/youtube_app` on VM
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
-## Current Status (2025-08-08)
+## Current Status (2025-08-08 - Updated)
 
-### 🚀 **Multi-Instance Collection System Active**
+### 🚀 **Collection-Only Service Active and Operational**
 
-The YouTube scraper is running with a multi-instance architecture for video collection:
+The YouTube app has been transformed into a lean video collection service:
 
 ✅ **System Status**:
 - **VM**: Running at 134.199.201.56 - 4 vCPU, 8GB RAM
