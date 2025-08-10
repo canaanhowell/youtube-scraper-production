@@ -4,7 +4,7 @@ import logging
 import firebase_admin
 from firebase_admin import credentials, firestore
 from typing import Dict, Any, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add project path to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,11 +72,15 @@ class FirebaseClient:
                     video_id = video_id.replace('/shorts/', 'shorts_')
                 video_id = video_id.replace('/', '_')
                 
-                # Create document reference
+                # Create ISO timestamp document ID
+                collected_at = datetime.now(timezone.utc)
+                doc_id = collected_at.isoformat().replace('+00:00', 'Z')  # Format: 2025-08-10T18:53:40.513000Z
+                
+                # Create document reference with ISO timestamp as ID
                 doc_ref = self.db.collection('youtube_videos') \
                     .document(keyword) \
                     .collection('videos') \
-                    .document(video_id)
+                    .document(doc_id)
                 
                 # Prepare video data
                 video_data = {

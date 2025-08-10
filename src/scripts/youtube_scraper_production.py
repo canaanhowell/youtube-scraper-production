@@ -9,7 +9,7 @@ import subprocess
 import asyncio
 import random
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional
 
 # Add project to path
@@ -380,9 +380,9 @@ class YouTubeScraperProduction:
                 logger.debug(f"Created parent document for keyword: {keyword}")
             
             # Create timestamp-based document ID for efficient time-range queries
-            collected_at = datetime.utcnow()
+            collected_at = datetime.now(timezone.utc)
             # Use ISO 8601 timestamp as document ID for efficient interval metrics
-            doc_id = collected_at.isoformat() + 'Z'  # Format: 2025-08-10T18:30:02.249361Z
+            doc_id = collected_at.isoformat().replace('+00:00', 'Z')  # Format: 2025-08-10T18:53:40.513000Z
             
             # Update collected_at to match document ID timestamp
             video_data['collected_at'] = collected_at.isoformat()
