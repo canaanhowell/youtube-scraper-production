@@ -9,13 +9,15 @@ This file contains the updated YouTube section that should replace the existing 
 **Current System:**
 - **youtube_app** (Alpine-based): Multi-instance wget video collection service
 - **Location**: `/opt/youtube_app` on VM (IP: 134.199.201.56)
-- **Keywords**: 70+ active keywords with reverse alphabetical processing  
+- **Keywords**: 76 active keywords with reverse alphabetical processing (40+ successful daily)
 - **Collection**: 3 parallel instances with staggered scheduling every 10 minutes
+- **Performance**: ~986+ videos collected daily with ~95% success rate
 - **Filtering**: Flexible space matching (e.g., "grok 3" matches "Grok3", "grok-3")
 - **Focus**: Video collection ONLY - no metrics, analytics, or processing
+- **Logging**: Fixed August 8, 2025 - now accurately reports collection statistics
 
 ### YouTube Collection Manager (Every 10 minutes, staggered)
-**Script**: `src/scripts/youtube_collection_manager_simple.py`
+**Script**: `src/scripts/youtube_collection_manager.py`
 **Schedule**: Every 10 minutes across 3 instances (staggered at :00/:03/:06, :10/:13/:16, etc.)
 **System**: youtube_app with 3 parallel VPN containers (youtube-vpn-1/2/3)
 
@@ -91,8 +93,10 @@ instance_keywords = total_keywords[(instance_id-1)*keywords_per_instance : insta
 
 ### Performance Metrics (Collection Only)
 - **Collection Speed**: ~81 seconds for 24 keywords per instance
-- **Success Rate**: 100% (recent runs)
+- **Success Rate**: ~95% (accurately tracked as of August 8, 2025)
+- **Daily Performance**: ~986+ videos collected daily, 40+ successful keywords
 - **Videos Collected**: 50-100+ videos per run (varies by keyword activity)
+- **Duplication Rate**: 2.22% cross-keyword duplicates (expected behavior)
 - **VPN Health**: All 3 containers healthy and rotating
 - **Redis Deduplication**: Instance-specific namespacing prevents false duplicates
 

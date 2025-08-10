@@ -25,6 +25,11 @@ Enterprise-ready YouTube video collection service with automated deployment, VPN
 - **DELETED**: ~40+ files, ~5,000+ lines of analytics code
 - **UPDATED**: All deployment scripts and documentation
 
+### 🔤 Reverse Alphabetical Keyword Processing
+- **SORTED**: Keywords now processed Z to A (zapier → youtube → claude)
+- **OPTIMIZED**: "claude code" runs before "claude" to prevent duplicates
+- **CONSISTENT**: Same processing order every run regardless of Firestore variations
+
 ### 🚀 Production Features
 - **Auto-Deployment**: Push to GitHub = automatic VM deployment
 - **Staggered Collection**: 3 instances run every 10 minutes at :00/:03/:06

@@ -91,6 +91,7 @@ class YouTubeCollectionManager:
                 'keywords_failed': 0,
                 'total_videos_collected': 0,
                 'videos_per_keyword': {},
+                'duplicates_filtered': 0,
                 'success_rate': 0.0,
                 'errors': [],
                 'success': False,
@@ -302,10 +303,13 @@ class YouTubeCollectionManager:
                         result = self.scraper.scrape_keyword(keyword, max_videos=100)
                         
                         videos_collected = result.get('saved_to_firebase', 0)
+                        duplicates_found = result.get('duplicates', 0)
+                        
                         self.collection_stats['videos_per_keyword'][keyword] = videos_collected
                         self.collection_stats['total_videos_collected'] += videos_collected
+                        self.collection_stats['duplicates_filtered'] += duplicates_found
                         
-                        logger.info(f"✅ Successfully collected {videos_collected} videos for '{keyword}' using {server}")
+                        logger.info(f"✅ Successfully collected {videos_collected} videos for '{keyword}' using {server} ({duplicates_found} duplicates filtered)")
                         return videos_collected
                         
                     except Exception as e:

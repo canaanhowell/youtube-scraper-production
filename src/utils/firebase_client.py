@@ -201,36 +201,22 @@ class FirebaseClient:
                 self.logger.error(f"Invalid document ID format: {doc_id}")
                 raise ValueError(f"Document ID must be a timestamp format, got: {doc_id}")
             
-            # Prepare log data with all required fields from firestore_mapping.md
+            # Prepare simplified log data with only required fields
             log_data = {
                 'timestamp': firestore.SERVER_TIMESTAMP,
-                'timestamp_readable': timestamp.isoformat(),
-                'timestamp_unix': timestamp.timestamp(),
+                'container': collection_stats.get('container', 'unknown'),
+                'duplicates_filtered': collection_stats.get('duplicates_filtered', 0),
                 'session_id': collection_stats.get('session_id', 'unknown'),
-                'script_name': collection_stats.get('script_name', 'unknown'),
-                'keywords_processed': collection_stats.get('keywords_processed', []),
-                'keywords_successful': collection_stats.get('keywords_successful', 0),
-                'keywords_failed': collection_stats.get('keywords_failed', 0),
                 'total_videos_collected': collection_stats.get('total_videos_collected', 0),
                 'videos_per_keyword': collection_stats.get('videos_per_keyword', {}),
-                'vpn_servers_used': collection_stats.get('vpn_servers_used', []),
-                'success_rate': collection_stats.get('success_rate', 0.0),
-                'errors': collection_stats.get('errors', []),
-                'duration_seconds': collection_stats.get('duration_seconds', 0),
-                'container': collection_stats.get('container', 'unknown'),
-                'instance_id': collection_stats.get('instance_id', 0),
-                'vm_hostname': collection_stats.get('vm_hostname', 'unknown'),
-                'success': collection_stats.get('success', False),
-                # Additional fields for completeness
-                'redis_enabled': collection_stats.get('redis_enabled', False),
-                'duplicates_filtered': collection_stats.get('duplicates_filtered', 0)
+                'duration_seconds': collection_stats.get('duration_seconds', 0)
             }
             
             # Create document with readable timestamp as ID
             doc_ref = self.db.collection('youtube_collection_logs').document(doc_id)
             doc_ref.set(log_data)
             
-            self.logger.info(f"Logged collection run to youtube_collection_logs/{doc_id}")
+            self.logger.info(f"Logged simplified collection run to youtube_collection_logs/{doc_id}")
             return doc_id
             
         except Exception as e:

@@ -175,17 +175,10 @@ class FirebaseClient:
     
     def log_collection_run(self, collection_stats: Dict[str, Any]) -> str:
         """
-        Log a collection run to youtube_collection_logs with readable timestamp as document name
+        Log a collection run to youtube_collection_logs with simplified format
         
         Args:
-            collection_stats: Dictionary containing run statistics including:
-                - keywords_processed: List of keywords
-                - total_videos_collected: Total videos collected
-                - videos_per_keyword: Dict of keyword -> video count
-                - duration_seconds: Total run duration
-                - success: Boolean indicating if run was successful
-                - errors: List of any errors encountered
-                - session_id: Unique session identifier
+            collection_stats: Dictionary containing run statistics
                 
         Returns:
             Document ID (timestamp) if successful, empty string if failed
@@ -201,30 +194,22 @@ class FirebaseClient:
                 self.logger.error(f"Invalid document ID format: {doc_id}")
                 raise ValueError(f"Document ID must be a timestamp format, got: {doc_id}")
             
-            # Prepare log data
+            # Prepare simplified log data with only required fields
             log_data = {
                 'timestamp': firestore.SERVER_TIMESTAMP,
-                'timestamp_readable': timestamp.isoformat(),
-                'timestamp_unix': timestamp.timestamp(),
-                'keywords_processed': collection_stats.get('keywords_processed', []),
+                'container': collection_stats.get('container', 'unknown'),
+                'duplicates_filtered': collection_stats.get('duplicates_filtered', 0),
+                'session_id': collection_stats.get('session_id', 'unknown'),
                 'total_videos_collected': collection_stats.get('total_videos_collected', 0),
                 'videos_per_keyword': collection_stats.get('videos_per_keyword', {}),
-                'duration_seconds': collection_stats.get('duration_seconds', 0),
-                'success': collection_stats.get('success', False),
-                'errors': collection_stats.get('errors', []),
-                'session_id': collection_stats.get('session_id', 'unknown'),
-                'vpn_servers_used': collection_stats.get('vpn_servers_used', []),
-                'redis_enabled': collection_stats.get('redis_enabled', False),
-                'duplicates_filtered': collection_stats.get('duplicates_filtered', 0),
-                'container': collection_stats.get('container', 'unknown'),
-                'vm_hostname': collection_stats.get('vm_hostname', 'unknown')
+                'duration_seconds': collection_stats.get('duration_seconds', 0)
             }
             
             # Create document with readable timestamp as ID
             doc_ref = self.db.collection('youtube_collection_logs').document(doc_id)
             doc_ref.set(log_data)
             
-            self.logger.info(f"Logged collection run to youtube_collection_logs/{doc_id}")
+            self.logger.info(f"Logged simplified collection run to youtube_collection_logs/{doc_id}")
             return doc_id
             
         except Exception as e:

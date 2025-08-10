@@ -148,16 +148,16 @@ class YouTubeCollectionManager:
             logger.error(f"Error verifying VPN connection: {e}")
             return False
     
-    def process_keyword(self, keyword: str, category: str, max_retries: int = 3) -> int:
+    def process_keyword(self, keyword: str, category: str, exact_match: bool = True, max_retries: int = 3) -> int:
         """Process a keyword with simple retry logic"""
-        logger.info(f"Processing keyword: '{keyword}'")
+        logger.info(f"Processing keyword: '{keyword}' (exact_match={exact_match})")
         
         for attempt in range(1, max_retries + 1):
             try:
                 logger.info(f"Attempt {attempt}/{max_retries} for keyword '{keyword}'")
                 
                 # Collect videos
-                result = self.scraper.scrape_keyword(keyword)
+                result = self.scraper.scrape_keyword(keyword, exact_match=exact_match)
                 videos_collected = result.get('saved_to_firebase', 0)
                 
                 logger.info(f"✅ Successfully collected {videos_collected} videos for '{keyword}'")
@@ -211,13 +211,15 @@ class YouTubeCollectionManager:
             for idx, keyword_doc in enumerate(keywords, 1):
                 keyword = keyword_doc.get('keyword', '')
                 category = keyword_doc.get('category', 'uncategorized')
+                exact_match = keyword_doc.get('exact_match', True)  # Default to True if not specified
                 
-                logger.info(f"Processing keyword {idx}/{len(keywords)}: '{keyword}'")
+                logger.info(f"Processing keyword {idx}/{len(keywords)}: '{keyword}' (exact_match={exact_match})")
                 
                 try:
                     videos_collected = self.process_keyword(
                         keyword=keyword,
-                        category=category
+                        category=category,
+                        exact_match=exact_match
                     )
                     
                     successful_keywords.append(keyword)

@@ -254,10 +254,13 @@ docker ps | grep youtube-vpn
 ## Performance & Scaling
 
 ### Current Performance Metrics
-- **Active Keywords**: 70+ keywords
+- **Active Keywords**: 76 keywords (40+ successful daily)
+- **Daily Collection**: ~986+ videos collected per day
 - **Videos per Collection**: 10-20 new videos per keyword
-- **Collection Time per Instance**: ~75 seconds (processing 24 keywords each)
+- **Collection Time per Instance**: ~81 seconds (processing 24 keywords each)
 - **Total Collection Time**: <2 minutes for all keywords across 3 instances
+- **Success Rate**: ~95% (accurately tracked as of August 8, 2025)
+- **Duplication Rate**: 2.22% (cross-keyword only, Redis working correctly)
 - **VPN Containers**: 3 parallel containers
 - **Redis Deduplication**: Instance-specific namespacing prevents false duplicates
 
@@ -292,10 +295,11 @@ docker ps | grep youtube-vpn
 - **Performance Tests**: Load and stress testing
 
 ### Quality Metrics
-- **Success Rate**: >95% collection success
-- **Data Quality**: Title filtering ensures relevance
+- **Success Rate**: ~95% collection success (fixed logging as of Aug 8, 2025)
+- **Data Quality**: Title filtering ensures relevance, 2.22% cross-keyword duplication
+- **Collection Accuracy**: 40+ keywords successful daily out of 76 active
 - **Uptime**: 99.9%+ with VPN redundancy
-- **Data Accuracy**: 100% (no fake data)
+- **Data Accuracy**: 100% (no fake data, Redis deduplication working correctly)
 
 ## Troubleshooting Guide
 

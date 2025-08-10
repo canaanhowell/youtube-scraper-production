@@ -68,10 +68,10 @@ class YouTubeScraperProduction:
         
         logger.info(f"Production YouTube scraper initialized (strict_title_filter={self.strict_title_filter}, pagination={self.enable_pagination})")
     
-    def scrape_keyword(self, keyword: str, max_videos: int = 1000) -> Dict:
+    def scrape_keyword(self, keyword: str, exact_match: bool = True, max_videos: int = 1000) -> Dict:
         """Scrape YouTube for a keyword and save to Firebase"""
         try:
-            logger.info(f"Starting scrape for keyword: {keyword} (pagination={'enabled' if self.enable_pagination else 'disabled'})")
+            logger.info(f"Starting scrape for keyword: {keyword} (exact_match={exact_match}, pagination={'enabled' if self.enable_pagination else 'disabled'})")
             start_time = datetime.utcnow()
             
             # Build YouTube search URL with last hour filter AND sort by upload date
@@ -83,7 +83,7 @@ class YouTubeScraperProduction:
             # Choose scraping method based on pagination setting
             if self.enable_pagination and PLAYWRIGHT_AVAILABLE:
                 # Use Playwright with pagination
-                videos, filtered_count = asyncio.run(self._scrape_with_pagination(search_url, keyword, max_videos))
+                videos, filtered_count = asyncio.run(self._scrape_with_pagination(search_url, keyword, exact_match, max_videos))
             else:
                 # Use traditional wget method (single page)
                 html_content = self._fetch_youtube_page(search_url)
@@ -92,7 +92,7 @@ class YouTubeScraperProduction:
                     return {'keyword': keyword, 'videos': [], 'error': 'Failed to fetch content'}
                 
                 # Extract videos from HTML using ytInitialData
-                videos, filtered_count = self._extract_videos_from_initial_data(html_content, keyword)
+                videos, filtered_count = self._extract_videos_from_initial_data(html_content, keyword, exact_match)
             
             logger.info(f"Extracted {len(videos)} videos matching keyword (filtered out {filtered_count} videos)")
             
@@ -181,7 +181,7 @@ class YouTubeScraperProduction:
             logger.error(f"Error fetching page: {e}")
             return None
     
-    def _extract_videos_from_initial_data(self, html_content: str, keyword: str) -> tuple[List[Dict], int]:
+    def _extract_videos_from_initial_data(self, html_content: str, keyword: str, exact_match: bool = True) -> tuple[List[Dict], int]:
         """Extract video data from YouTube's ytInitialData
         
         Returns:
@@ -212,7 +212,7 @@ class YouTubeScraperProduction:
                 
                 for item in items:
                     if 'videoRenderer' in item:
-                        video_data = self._parse_video_renderer(item['videoRenderer'], keyword)
+                        video_data = self._parse_video_renderer(item['videoRenderer'], keyword, exact_match)
                         if video_data:
                             if video_data == 'filtered':
                                 filtered_count += 1
@@ -226,7 +226,7 @@ class YouTubeScraperProduction:
             logger.error(f"Error extracting videos: {e}", exc_info=True)
             return [], 0
     
-    def _parse_video_renderer(self, video_renderer: Dict, keyword: str) -> Optional[Dict]:
+    def _parse_video_renderer(self, video_renderer: Dict, keyword: str, exact_match: bool = True) -> Optional[Dict]:
         """Parse a videoRenderer object into our video data format"""
         try:
             video_id = video_renderer.get('videoId', '')
@@ -238,8 +238,8 @@ class YouTubeScraperProduction:
             title = ' '.join(run.get('text', '') for run in title_runs) if title_runs else ''
             
             # Check if title contains keyword (if strict filtering is enabled)
-            if self.strict_title_filter and not self._title_contains_keyword(title, keyword):
-                logger.debug(f"Filtered out video: '{title}' (keyword: '{keyword}')")
+            if self.strict_title_filter and not self._title_contains_keyword(title, keyword, exact_match):
+                logger.debug(f"Filtered out video: '{title}' (keyword: '{keyword}', exact_match: {exact_match})")
                 return 'filtered'
             
             # Extract thumbnail URL
@@ -304,37 +304,53 @@ class YouTubeScraperProduction:
         except Exception as e:
             logger.error(f"Error marking video: {e}")
     
-    def _title_contains_keyword(self, title: str, keyword: str) -> bool:
+    def _title_contains_keyword(self, title: str, keyword: str, exact_match: bool = True) -> bool:
         """
-        Check if the title contains the keyword as an exact phrase match.
-        Keywords must appear with exact spacing and word order.
+        Check if the title contains the keyword based on exact_match setting.
         
-        Examples:
-        - "character ai" must match "Character AI" exactly (case insensitive)
-        - "claude code" must match "Claude Code" exactly
-        - "machine learning" will NOT match "learning machine"
+        When exact_match=True:
+        - Keywords must appear as a complete unit (spaces/dashes/no-spaces are interchangeable)
+        - "Brain Map" matches "brain map", "brainmap", "brain-map"
+        
+        When exact_match=False:
+        - All words from keyword must appear somewhere in title (any order)
+        - "Master AI" matches "I am master of virtual AI"
         
         Args:
             title: Video title
-            keyword: Search keyword (must be exact phrase)
+            keyword: Search keyword
+            exact_match: If True, use exact phrase matching. If False, match all words anywhere.
             
         Returns:
-            bool: True if exact keyword phrase is found in title
+            bool: True if keyword matches according to exact_match rules
         """
         # Convert to lowercase for case-insensitive comparison
         title_lower = title.lower()
         keyword_lower = keyword.lower()
         
-        # Check for exact phrase match
-        if keyword_lower in title_lower:
-            return True
-        
-        # For multi-word keywords, also check hyphenated versions
-        # e.g., "character ai" -> "character-ai"
-        if ' ' in keyword_lower:
-            hyphenated_keyword = keyword_lower.replace(' ', '-')
-            if hyphenated_keyword in title_lower:
+        if exact_match:
+            # Check for exact phrase match
+            if keyword_lower in title_lower:
                 return True
+            
+            # For multi-word keywords, also check hyphenated and no-space versions
+            if ' ' in keyword_lower:
+                # Check hyphenated version: "brain map" -> "brain-map"
+                hyphenated_keyword = keyword_lower.replace(' ', '-')
+                if hyphenated_keyword in title_lower:
+                    return True
+                
+                # Check no-space version: "brain map" -> "brainmap"
+                no_space_keyword = keyword_lower.replace(' ', '')
+                if no_space_keyword in title_lower:
+                    return True
+        else:
+            # Non-exact match: all words must be present somewhere in title
+            keyword_words = keyword_lower.split()
+            for word in keyword_words:
+                if word not in title_lower:
+                    return False
+            return True
         
         return False
     
@@ -344,6 +360,13 @@ class YouTubeScraperProduction:
             # Ensure video_id is clean (no /shorts/ prefix)
             video_id = video_data['id'].replace('shorts/', '').replace('/shorts/', '')
             video_data['id'] = video_id
+            
+            # Check if video already exists (by video_id)
+            videos_ref = self.firebase.db.collection('youtube_videos').document(keyword).collection('videos')
+            existing = videos_ref.where('id', '==', video_id).limit(1).stream()
+            if any(existing):
+                logger.debug(f"Video {video_id} already exists, skipping")
+                return False
             
             # Ensure parent document exists (required for subcollections)
             parent_ref = self.firebase.db.collection('youtube_videos').document(keyword)
@@ -356,8 +379,16 @@ class YouTubeScraperProduction:
                 })
                 logger.debug(f"Created parent document for keyword: {keyword}")
             
-            # Store in Firebase
-            self.firebase.db.collection('youtube_videos').document(keyword).collection('videos').document(video_id).set(video_data)
+            # Create timestamp-based document ID for efficient time-range queries
+            collected_at = datetime.utcnow()
+            # Use ISO 8601 timestamp as document ID for efficient interval metrics
+            doc_id = collected_at.isoformat() + 'Z'  # Format: 2025-08-10T18:30:02.249361Z
+            
+            # Update collected_at to match document ID timestamp
+            video_data['collected_at'] = collected_at.isoformat()
+            
+            # Store in Firebase with timestamp as document ID
+            self.firebase.db.collection('youtube_videos').document(keyword).collection('videos').document(doc_id).set(video_data)
             
             logger.debug(f"Saved video {video_id} to Firebase")
             return True
@@ -366,14 +397,14 @@ class YouTubeScraperProduction:
             logger.error(f"Error saving to Firebase: {e}")
             return False
 
-    async def _scrape_with_pagination(self, search_url: str, keyword: str, max_videos: int) -> tuple[List[Dict], int]:
+    async def _scrape_with_pagination(self, search_url: str, keyword: str, exact_match: bool, max_videos: int) -> tuple[List[Dict], int]:
         """Scrape YouTube with pagination using Playwright through VPN container"""
         videos = []
         filtered_count = 0
         
         try:
             # Use docker exec to run Playwright inside the VPN container
-            playwright_script = self._generate_playwright_script(search_url, keyword, max_videos)
+            playwright_script = self._generate_playwright_script(search_url, keyword, exact_match, max_videos)
             
             # Write the script to a temporary file
             script_path = "/tmp/youtube_pagination_script.py"
@@ -411,7 +442,7 @@ class YouTubeScraperProduction:
         
         return videos, filtered_count
     
-    def _generate_playwright_script(self, search_url: str, keyword: str, max_videos: int) -> str:
+    def _generate_playwright_script(self, search_url: str, keyword: str, exact_match: bool, max_videos: int) -> str:
         """Generate a Playwright script for pagination scraping"""
         return f'''#!/usr/bin/env python3
 import asyncio
