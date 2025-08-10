@@ -31,14 +31,14 @@ The YouTube app uses Firebase Firestore as its database for storing collected vi
 
 **Purpose**: Stores raw video data collected from YouTube
 
-**Path Structure**: `youtube_videos/{keyword}/videos/{video_id}`
+**Path Structure**: `youtube_videos/{keyword}/videos/{timestamp}`
 
-**Document ID**: YouTube video ID
+**Document ID**: ISO 8601 timestamp (e.g., `2025-08-10T18:53:40.513000Z`)
 
 **Fields**:
 | Field Name | Type | Description | Example |
 |------------|------|-------------|---------|
-| `video_id` | string | YouTube video ID | "dQw4w9WgXcQ" |
+| `id` | string | YouTube video ID | "dQw4w9WgXcQ" |
 | `title` | string | Video title | "Introduction to Claude AI" |
 | `url` | string | Full YouTube URL | "https://youtube.com/watch?v=dQw4w9WgXcQ" |
 | `channel_name` | string | Channel name | "AI Explained" |
@@ -47,7 +47,7 @@ The YouTube app uses Firebase Firestore as its database for storing collected vi
 | `duration` | string | Video duration | "12:34" |
 | `published_time_text` | string | Relative publish time | "3 days ago" |
 | `thumbnail_url` | string | Thumbnail image URL | "https://i.ytimg.com/vi/..." |
-| `collected_at` | timestamp | When we collected this video | 2025-08-04T14:15:00Z |
+| `collected_at` | string | When we collected this video | "2025-08-10T18:53:40.513000Z" |
 | `keyword` | string | Search keyword used | "claude" |
 
 ### 3. youtube_collection_logs
@@ -95,7 +95,7 @@ youtube_collection_logs (audit trail)
 
 2. **Document IDs**:
    - Keywords use underscore-separated names (e.g., `leonardo_ai`, `stable_diffusion`)
-   - Videos use YouTube video IDs for deduplication
+   - Videos use ISO 8601 timestamps for efficient time-range queries (e.g., `2025-08-10T18:53:40.513000Z`)
    - Collection logs use readable timestamps (e.g., `collection_2025-08-05_15-30-45_UTC`)
 
 3. **Collection Focus**:
@@ -145,5 +145,5 @@ youtube_collection_logs (audit trail)
 
 ---
 
-*Document Version: 2.0 - Simplified for collection-only focus*
-*Last Updated: 2025-08-08*
+*Document Version: 2.1 - Updated with ISO timestamp document IDs*
+*Last Updated: 2025-08-10*

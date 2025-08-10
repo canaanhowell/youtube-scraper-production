@@ -254,8 +254,8 @@ docker ps | grep youtube-vpn
 ## Performance & Scaling
 
 ### Current Performance Metrics
-- **Active Keywords**: 76 keywords (40+ successful daily)
-- **Daily Collection**: ~986+ videos collected per day
+- **Active Keywords**: 68 keywords (actively collecting)
+- **Daily Collection**: ~1,600+ videos collected per day
 - **Videos per Collection**: 10-20 new videos per keyword
 - **Collection Time per Instance**: ~81 seconds (processing 24 keywords each)
 - **Total Collection Time**: <2 minutes for all keywords across 3 instances
@@ -364,7 +364,7 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ### Firebase Collections
 - `youtube_keywords` - Source keywords (read only)
-- `youtube_videos/{keyword}/videos` - Video storage
+- `youtube_videos/{keyword}/videos` - Video storage (document IDs are ISO timestamps)
 - `youtube_collection_logs` - Audit trail
 
 ## Maintenance Notes
@@ -392,8 +392,9 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ---
 
-*Last Updated: 2025-08-08*
-*Document Version: 3.1 - Updated post-analytics removal*
+*Last Updated: 2025-08-10*
+*Document Version: 3.2 - Updated with ISO timestamp document IDs*
 
-**⚠️ MAJOR ARCHITECTURAL CHANGE (August 8, 2025):**
-All analytics and metrics processing have been completely removed. This app now exclusively performs video collection. All analytics functionality has been moved to separate services.
+**⚠️ RECENT CHANGES:**
+- **August 10, 2025**: Videos now use ISO 8601 timestamps as document IDs for efficient time-range queries
+- **August 8, 2025**: All analytics and metrics processing removed. This app now exclusively performs video collection.

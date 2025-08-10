@@ -19,7 +19,7 @@ You have 2 rules:
 - **Location**: `/opt/youtube_app` on VM
 - **Repository**: https://github.com/canaanhowell/youtube-scraper-production
 
-## Current Status (2025-08-08 - Updated)
+## Current Status (2025-08-10 - Updated)
 
 ### 🚀 **Collection-Only Service Active and Operational**
 
@@ -35,11 +35,22 @@ The YouTube app has been transformed into a lean video collection service:
 - **Deployment**: GitHub Actions auto-deployment ACTIVE
 - **Collection Method**: wget-based (20 videos per keyword)
 - **Collection Schedule**: Every 10 minutes via cron (staggered multi-instance)
-- **Keywords**: 76 active keywords sorted in reverse alphabetical order
-- **Daily Performance**: ~986+ videos collected daily, 40+ successful keywords
+- **Keywords**: 68 active keywords sorted in reverse alphabetical order
+- **Daily Performance**: ~1,600+ videos collected daily
 - **Success Rate**: ~95% actual performance (now accurately reported in logs)
 
-### 🔧 **Latest Updates (2025-08-08)**:
+### 🔧 **Latest Updates (2025-08-10)**:
+
+**🎯 ISO Timestamp Document IDs - IMPLEMENTED**:
+- ✅ **Document ID Format Changed**: Now using ISO 8601 timestamps as document IDs
+- ✅ **Format**: `2025-08-10T18:53:40.513000Z` instead of YouTube video IDs
+- ✅ **Purpose**: Enables efficient time-range queries for interval metrics
+- ✅ **Implementation**: Updated `_save_to_firebase()` in youtube_scraper_production.py
+- ✅ **Benefits**: Firestore can use `.order_by('__name__').start_at()` for fast filtering
+- ✅ **Video ID Preserved**: Original YouTube video ID still stored in 'id' field
+- ✅ **Duplicate Check**: Now queries by video ID field instead of document ID
+
+### 🔧 **Previous Updates (2025-08-08)**:
 
 **🔧 Collection Logging Statistics Fix - DEPLOYED**:
 - ✅ **Fixed Logging Issue**: Collection logs now show accurate success metrics

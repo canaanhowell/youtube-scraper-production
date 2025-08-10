@@ -17,7 +17,13 @@ Enterprise-ready YouTube video collection service with automated deployment, VPN
 - ❌ No analytics pipeline
 - ❌ Just pure video collection
 
-## Recent Updates (2025-08-08)
+## Recent Updates (2025-08-10)
+
+### 🎯 ISO Timestamp Document IDs
+- **NEW FORMAT**: Videos now use ISO 8601 timestamps as document IDs
+- **EFFICIENT**: Enables fast time-range queries for interval metrics
+- **EXAMPLE**: `2025-08-10T18:53:40.513000Z` instead of YouTube video ID
+- **PRESERVED**: Original video ID still stored in 'id' field
 
 ### 🧹 Major Cleanup - Analytics Removal
 - **SIMPLIFIED**: Removed all metrics and analytics code
@@ -34,7 +40,7 @@ Enterprise-ready YouTube video collection service with automated deployment, VPN
 - **Auto-Deployment**: Push to GitHub = automatic VM deployment
 - **Staggered Collection**: 3 instances run every 10 minutes at :00/:03/:06
 - **Smart VPN Rotation**: 24 US Surfshark servers with health tracking
-- **Firebase Integration**: Real-time video data storage
+- **Firebase Integration**: Real-time video data storage with timestamp-based IDs
 - **Title Filtering**: Flexible keyword matching for multi-word terms
 
 ## Quick Start

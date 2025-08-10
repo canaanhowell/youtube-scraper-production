@@ -10,6 +10,7 @@ import asyncio
 import random
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
+import pytz
 from typing import List, Dict, Optional
 
 # Add project to path
@@ -380,12 +381,15 @@ class YouTubeScraperProduction:
                 logger.debug(f"Created parent document for keyword: {keyword}")
             
             # Create timestamp-based document ID for efficient time-range queries
-            collected_at = datetime.now(timezone.utc)
-            # Use ISO 8601 timestamp as document ID for efficient interval metrics
-            doc_id = collected_at.isoformat().replace('+00:00', 'Z')  # Format: 2025-08-10T18:53:40.513000Z
+            # Use CST (Central Standard Time) for consistency with other systems
+            cst = pytz.timezone('America/Chicago')
+            collected_at_utc = datetime.now(timezone.utc)
+            collected_at_cst = collected_at_utc.astimezone(cst)
+            # Use ISO 8601 timestamp in CST as document ID
+            doc_id = collected_at_cst.isoformat().replace('-06:00', 'Z').replace('-05:00', 'Z')  # Format: 2025-08-10T13:53:40.513000Z (CST)
             
-            # Update collected_at to match document ID timestamp
-            video_data['collected_at'] = collected_at.isoformat()
+            # Update collected_at to use UTC timestamp (keep data in UTC)
+            video_data['collected_at'] = collected_at_utc.isoformat()
             
             # Store in Firebase with timestamp as document ID
             self.firebase.db.collection('youtube_videos').document(keyword).collection('videos').document(doc_id).set(video_data)
