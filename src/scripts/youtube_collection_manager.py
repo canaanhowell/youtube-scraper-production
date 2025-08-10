@@ -3,6 +3,7 @@
 YouTube Collection Manager - Production Script
 Handles VPN rotation and YouTube video collection with Firebase integration
 NO FALLBACKS - Fails fast on any error
+Last deployed: 2025-08-10 15:10:00 UTC
 """
 
 import os
