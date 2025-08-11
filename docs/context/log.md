@@ -41,14 +41,16 @@ The YouTube app has been transformed into a lean video collection service:
 
 ### 🔧 **Latest Updates (2025-08-10)**:
 
-**🎯 ISO Timestamp Document IDs - IMPLEMENTED**:
-- ✅ **Document ID Format Changed**: Now using ISO 8601 timestamps as document IDs
-- ✅ **Format**: `2025-08-10T18:53:40.513000Z` instead of YouTube video IDs
-- ✅ **Purpose**: Enables efficient time-range queries for interval metrics
+**🎯 ISO Timestamp Document IDs with Keyword Suffix - IMPLEMENTED**:
+- ✅ **Document ID Format Updated**: Now using ISO 8601 timestamps with keyword suffix as document IDs
+- ✅ **Format**: `2025-08-10T18:53:40.513000Z_chatgpt` instead of just timestamp
+- ✅ **Purpose**: Prevents collisions when multiple keywords have videos at the same timestamp
 - ✅ **Implementation**: Updated `_save_to_firebase()` in youtube_scraper_production.py
-- ✅ **Benefits**: Firestore can use `.order_by('__name__').start_at()` for fast filtering
+- ✅ **Benefits**: 
+  - Firestore can use `.order_by('__name__').start_at()` for fast filtering
+  - No collisions between keywords collecting videos at the same timestamp
 - ✅ **Video ID Preserved**: Original YouTube video ID still stored in 'id' field
-- ✅ **Duplicate Check**: Now queries by video ID field instead of document ID
+- ✅ **Duplicate Check**: Still queries by video ID field, not affected by document ID change
 
 ### 🔧 **Previous Updates (2025-08-08)**:
 

@@ -31,9 +31,9 @@ The YouTube app uses Firebase Firestore as its database for storing collected vi
 
 **Purpose**: Stores raw video data collected from YouTube
 
-**Path Structure**: `youtube_videos/{keyword}/videos/{timestamp}`
+**Path Structure**: `youtube_videos/{keyword}/videos/{timestamp_keyword}`
 
-**Document ID**: ISO 8601 timestamp (e.g., `2025-08-10T18:53:40.513000Z`)
+**Document ID**: ISO 8601 timestamp with keyword suffix (e.g., `2025-08-10T18:53:40.513000Z_chatgpt`)
 
 **Fields**:
 | Field Name | Type | Description | Example |
@@ -88,15 +88,16 @@ youtube_collection_logs (audit trail)
 ## Key Design Decisions
 
 1. **Nested Video Storage**:
-   - Videos stored under `youtube_videos/{keyword}/videos/{video_id}`
+   - Videos stored under `youtube_videos/{keyword}/videos/{timestamp_keyword}`
    - Allows efficient querying by keyword
    - Prevents duplicate videos per keyword
    - **IMPORTANT**: Parent document must exist before adding videos to subcollection
 
 2. **Document IDs**:
    - Keywords use underscore-separated names (e.g., `leonardo_ai`, `stable_diffusion`)
-   - Videos use ISO 8601 timestamps for efficient time-range queries (e.g., `2025-08-10T18:53:40.513000Z`)
+   - Videos use ISO 8601 timestamps with keyword suffix for efficient time-range queries (e.g., `2025-08-10T18:53:40.513000Z_chatgpt`)
    - Collection logs use readable timestamps (e.g., `collection_2025-08-05_15-30-45_UTC`)
+   - **NEW**: Keyword suffix prevents collisions when multiple keywords have videos at the same timestamp
 
 3. **Collection Focus**:
    - No metrics storage
@@ -145,5 +146,5 @@ youtube_collection_logs (audit trail)
 
 ---
 
-*Document Version: 2.1 - Updated with ISO timestamp document IDs*
+*Document Version: 2.2 - Updated with ISO timestamp + keyword suffix document IDs*
 *Last Updated: 2025-08-10*

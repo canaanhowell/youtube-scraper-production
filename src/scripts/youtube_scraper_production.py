@@ -380,13 +380,15 @@ class YouTubeScraperProduction:
                 })
                 logger.debug(f"Created parent document for keyword: {keyword}")
             
-            # Create timestamp-based document ID for efficient time-range queries
+            # Create timestamp-based document ID with keyword suffix for efficient time-range queries
             # Use CST (Central Standard Time) for consistency with other systems
             cst = pytz.timezone('America/Chicago')
             collected_at_utc = datetime.now(timezone.utc)
             collected_at_cst = collected_at_utc.astimezone(cst)
-            # Use ISO 8601 timestamp in CST as document ID
-            doc_id = collected_at_cst.isoformat().replace('-06:00', 'Z').replace('-05:00', 'Z')  # Format: 2025-08-10T13:53:40.513000Z (CST)
+            # Use ISO 8601 timestamp in CST with keyword suffix as document ID
+            timestamp = collected_at_cst.isoformat().replace('-06:00', 'Z').replace('-05:00', 'Z')  # Format: 2025-08-10T13:53:40.513000Z (CST)
+            # Append keyword to prevent collisions when multiple keywords have videos at the same timestamp
+            doc_id = f"{timestamp}_{keyword}"
             
             # Update collected_at to use UTC timestamp (keep data in UTC)
             video_data['collected_at'] = collected_at_utc.isoformat()

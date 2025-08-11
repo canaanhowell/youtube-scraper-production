@@ -364,7 +364,7 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 
 ### Firebase Collections
 - `youtube_keywords` - Source keywords (read only)
-- `youtube_videos/{keyword}/videos` - Video storage (document IDs are ISO timestamps)
+- `youtube_videos/{keyword}/videos` - Video storage (document IDs are ISO timestamps with keyword suffix)
 - `youtube_collection_logs` - Audit trail
 
 ## Maintenance Notes
@@ -393,8 +393,8 @@ grep ERROR /opt/youtube_app/logs/error.log | tail -20
 ---
 
 *Last Updated: 2025-08-10*
-*Document Version: 3.2 - Updated with ISO timestamp document IDs*
+*Document Version: 3.3 - Updated with ISO timestamp + keyword suffix document IDs*
 
 **⚠️ RECENT CHANGES:**
-- **August 10, 2025**: Videos now use ISO 8601 timestamps as document IDs for efficient time-range queries
+- **August 10, 2025**: Videos now use ISO 8601 timestamps with keyword suffix as document IDs (e.g., `2025-08-10T18:53:40.513000Z_chatgpt`) to prevent collisions
 - **August 8, 2025**: All analytics and metrics processing removed. This app now exclusively performs video collection.
